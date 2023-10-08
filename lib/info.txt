@@ -1,0 +1,17 @@
+2.5.0 => 4.0.0
+
+updated info =>
+    1. set premium user limitation
+               i. text limitation = 100,
+               ii. img gen limitation = 50,
+               iii. premium user duration = 30 days,
+               iv. subscription fee 9 USD
+    2. myPlanScreen
+                i. show textLimit,
+                ii. show imgLimit,
+                iii. durationLimit
+
+
+
+ IMPORTANT NOTICE:   1. update, get => textCount and ImageCount in MainController.
+                     2. if premium limit is over for both it is automatically convert into freeuser
