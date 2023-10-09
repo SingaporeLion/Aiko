@@ -18,6 +18,7 @@ import '../model/user_model/user_model.dart';
 import '../services/api_services.dart';
 import '../utils/strings.dart';
 import 'main_controller.dart';
+import '../widgets/api/custom_loading_api.dart';
 
 class ChatController extends GetxController {
   Timer? timer;
@@ -77,14 +78,14 @@ class ChatController extends GetxController {
     // Benutzernachricht hinzufügen
     messages.value.add(
       ChatMessage(
-        text: chatController.text,
-        chatMessageType: ChatMessageType.user,
+        text: "Lynn's Zauberhut ist auf... Antwort kommt gleich!",
+        chatMessageType: ChatMessageType.bot,
       ),
     );
     shareMessages.add("${chatController.text} - Myself\n");
     itemCount.value = messages.value.length;
 
-    // Fügen Sie eine temporäre Nachricht hinzu, die anzeigt, dass die KI tippt
+    // Fügen Sie die Animation und die Nachricht hinzu
     messages.value.add(
       ChatMessage(
         text: "Lynn's Zauberhut ist auf... Antwort kommt gleich!",
@@ -103,15 +104,6 @@ class ChatController extends GetxController {
     Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
     update();
 
-    debugPrint("---------------S------------------");
-    debugPrint("SEND TEXT");
-    debugPrint(input);
-    debugPrint(input);
-    debugPrint("---------------E------------------");
-
-    // Fügen Sie hier die Verzögerung ein
-    await Future.delayed(Duration(seconds: 1));
-
     _apiProcess(input);
 
     chatController.clear();
@@ -120,10 +112,19 @@ class ChatController extends GetxController {
   }
 
   void _apiProcess(String input) {
+    // Fügen Sie die temporäre Nachricht (Text + Emoji) hinzu
+    messages.value.add(
+      ChatMessage(
+        text: "Antwort im Anflug... 🐦",
+        chatMessageType: ChatMessageType.bot,
+      ),
+    );
+    update();  // Aktualisieren Sie den Zustand
+
     if (LocalStorage.getSelectedModel() == 'gpt-3.5-turbo') {
-      ApiServices.generateResponse2(input).then((value) {
+      ApiServices.generateResponse2(input).then((response) {
         // Überprüfen Sie, ob der Wert null oder leer ist
-        if (value == null || value.trim().isEmpty) {
+        if (response == null || response.trim().isEmpty) {
           debugPrint("API Response is null or empty");
           return; // Beenden Sie die Methode, wenn der Wert null oder leer ist
         }
@@ -131,29 +132,30 @@ class ChatController extends GetxController {
         isLoading.value = false;
         debugPrint("---------------Chat Response------------------");
         debugPrint("RECEIVED");
-        debugPrint(value);
+        debugPrint(response);
         debugPrint("---------------END------------------");
 
+        // Sobald die Antwort der KI eintrifft:
         // Entfernen Sie die temporäre Nachricht
         messages.value.removeLast();
 
         // Fügen Sie die KI-Antwort hinzu
         messages.value.add(
           ChatMessage(
-            text: value.replaceFirst("\n", " ").replaceFirst("\n", " "),
+            text: response.replaceFirst("\n", " ").replaceFirst("\n", " "),
             chatMessageType: ChatMessageType.bot,
           ),
         );
         update();  // Aktualisieren Sie den Zustand
 
-        shareMessages.add("${value.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
+        shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
         Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
         itemCount.value = messages.value.length;
       });
     } else {
-      ApiServices.generateResponse2(input).then((value) {
+      ApiServices.generateResponse2(input).then((response) {
         // Überprüfen Sie, ob der Wert null oder leer ist
-        if (value == null || value.trim().isEmpty) {
+        if (response == null || response.trim().isEmpty) {
           debugPrint("API Response is null or empty");
           return; // Beenden Sie die Methode, wenn der Wert null oder leer ist
         }
@@ -166,7 +168,7 @@ class ChatController extends GetxController {
         // Fügen Sie die KI-Antwort hinzu
         messages.value.add(
           ChatMessage(
-            text: value.replaceFirst("\n", " ").replaceFirst("\n", " "),
+            text: response.replaceFirst("\n", " ").replaceFirst("\n", " "),
             chatMessageType: ChatMessageType.bot,
           ),
         );
@@ -174,15 +176,16 @@ class ChatController extends GetxController {
 
         debugPrint("---------------Chat Response------------------");
         debugPrint("RECEIVED");
-        debugPrint(value);
+        debugPrint(response);
         debugPrint("---------------END------------------");
 
-        shareMessages.add("${value.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
+        shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
         Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
         itemCount.value = messages.value.length;
       });
     }
   }
+
 
   RxString textInput = ''.obs;
 

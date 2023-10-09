@@ -14,6 +14,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  rive: ^0.11.17
   shared_preferences: ^2.2.1  # Fügen Sie die neueste Version hinzu. Überprüfen Sie https://pub.dev/packages/shared_preferences für die neueste Version.
   animated_text_kit: ^4.2.2
   xml: ^6.3.0
@@ -95,7 +96,6 @@ flutter:
   uses-material-design: true
 
   assets:
-
     - assets/
     - assets/logo/bot.png
     - assets/apple_pay.json
