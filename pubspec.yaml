@@ -14,6 +14,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  lottie: ^2.6.0
   rive: ^0.11.17
   shared_preferences: ^2.2.1  # Fügen Sie die neueste Version hinzu. Überprüfen Sie https://pub.dev/packages/shared_preferences für die neueste Version.
   animated_text_kit: ^4.2.2
@@ -102,5 +104,6 @@ flutter:
     - assets/google_pay.json
     - assets/icon/
     - assets/icon/diet_chart.svg
+    - assets/heart.json
 
 #end version 3.7.2

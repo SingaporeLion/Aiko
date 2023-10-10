@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:lottie/lottie.dart';
 
 import '../controller/chat_controller.dart';
 import '../helper/local_storage.dart';
@@ -15,6 +16,7 @@ import '../widgets/api/toast_message.dart';
 import '../widgets/appbar/appbar_widget.dart';
 import '../widgets/chat_message_widget.dart';
 import '../widgets/inputs_widgets/send_input_field.dart';
+
 
 class ChatScreen extends StatelessWidget {
   ChatScreen({Key? key}) : super(key: key);
@@ -45,6 +47,7 @@ class ChatScreen extends StatelessWidget {
     );
   }
 
+
   _mainBody(BuildContext context) {
     return Obx(
           () => Column(
@@ -53,18 +56,21 @@ class ChatScreen extends StatelessWidget {
             flex: 5,
             child: _buildList(),
           ),
-          Expanded(
-            flex: 0,
-            child: Obx(() => Visibility(
-                visible: controller.isLoading.value,
-                child: const CustomLoadingAPI())),
-          ),
+          controller.isLoading.value
+              ? Column(
+            children: [
+              const CustomLoadingAPI(), // 3-Punkte-Animation
+              Text("Antwort im Anflug... 🐦"),
+            ],
+          )
+              : Container(),
           Expanded(flex: 0, child: _submitButton(context)),
           SizedBox(height: Dimensions.heightSize)
         ],
       ),
     );
   }
+
 
   _submitButton(BuildContext context) {
     var value = 5 - controller.count.value;
@@ -94,7 +100,7 @@ class ChatScreen extends StatelessWidget {
               ],
             ),
           ),
-          _suggestedWidget(context),
+          //_suggestedWidget(context),
           SendInputField(
             icon: Icon(
               Icons.mic_none_sharp,
@@ -154,43 +160,7 @@ class ChatScreen extends StatelessWidget {
     );
   }
 
-  _suggestedWidget(BuildContext context) {
-    return Obx(() => controller.isLoading2.value
-        ? const CustomLoadingAPI()
-        : SizedBox(
-      height: 25,
-      width: double.infinity,
-      child: ListView.separated(
-          padding: EdgeInsets.only(left: Dimensions.widthSize * 1),
-          shrinkWrap: true,
-          physics: const BouncingScrollPhysics(),
-          scrollDirection: Axis.horizontal,
-          itemBuilder: (context, index) {
-            return InkWell(
-              onTap: () {
-                openCustomBottomSheet(context, controller.suggestedData[index]);
-              },
-              child: Container(
-                alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(horizontal: 5),
-                decoration: BoxDecoration(
-                    borderRadius:
-                    BorderRadius.circular(Dimensions.radius * .7),
-                    color: Get.isDarkMode
-                        ? CustomColor.primaryColor.withOpacity(0.2)
-                        : CustomColor.primaryColor
-                ),
-                child: Text(
-                  controller.suggestedData[index]['catName'],
-                  style: const TextStyle(color: CustomColor.whiteColor),
-                ),
-              ),
-            );
-          },
-          separatorBuilder: (_, i) => const SizedBox(width: 5),
-          itemCount: controller.suggestedData.length),
-    ));
-  }
+
 
   void openCustomBottomSheet(BuildContext context, data) {
     showModalBottomSheet(

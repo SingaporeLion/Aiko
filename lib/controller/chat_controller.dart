@@ -78,21 +78,12 @@ class ChatController extends GetxController {
     // Benutzernachricht hinzufügen
     messages.value.add(
       ChatMessage(
-        text: "Lynn's Zauberhut ist auf... Antwort kommt gleich!",
-        chatMessageType: ChatMessageType.bot,
+        text: chatController.text, // Dies sollte die tatsächliche Nachricht des Benutzers sein
+        chatMessageType: ChatMessageType.user, // Dies sollte der Nachrichtentyp des Benutzers sein
       ),
     );
     shareMessages.add("${chatController.text} - Myself\n");
     itemCount.value = messages.value.length;
-
-    // Fügen Sie die Animation und die Nachricht hinzu
-    messages.value.add(
-      ChatMessage(
-        text: "Lynn's Zauberhut ist auf... Antwort kommt gleich!",
-        chatMessageType: ChatMessageType.bot,
-      ),
-    );
-    update();  // Aktualisieren Sie den Zustand
 
     isLoading.value = true;
 
@@ -112,80 +103,39 @@ class ChatController extends GetxController {
   }
 
   void _apiProcess(String input) {
-    // Fügen Sie die temporäre Nachricht (Text + Emoji) hinzu
-    messages.value.add(
-      ChatMessage(
-        text: "Antwort im Anflug... 🐦",
-        chatMessageType: ChatMessageType.bot,
-      ),
-    );
-    update();  // Aktualisieren Sie den Zustand
 
-    if (LocalStorage.getSelectedModel() == 'gpt-3.5-turbo') {
-      ApiServices.generateResponse2(input).then((response) {
-        // Überprüfen Sie, ob der Wert null oder leer ist
-        if (response == null || response.trim().isEmpty) {
-          debugPrint("API Response is null or empty");
-          return; // Beenden Sie die Methode, wenn der Wert null oder leer ist
-        }
+    ApiServices.generateResponse2(input).then((response) {
+      // Überprüfen Sie, ob der Wert null oder leer ist
+      if (response == null || response.trim().isEmpty) {
+        debugPrint("API Response is null or empty");
+        isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
+        return; // Beenden Sie die Methode, wenn der Wert null oder leer ist
+      }
 
-        isLoading.value = false;
-        debugPrint("---------------Chat Response------------------");
-        debugPrint("RECEIVED");
-        debugPrint(response);
-        debugPrint("---------------END------------------");
+      isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
+      debugPrint("---------------Chat Response------------------");
+      debugPrint("RECEIVED");
+      debugPrint(response);
+      debugPrint("---------------END------------------");
 
-        // Sobald die Antwort der KI eintrifft:
-        // Entfernen Sie die temporäre Nachricht
-        messages.value.removeLast();
+      // Sobald die Antwort der KI eintrifft:
+      // Entfernen Sie die temporäre Nachricht
+      messages.value.removeLast();
 
-        // Fügen Sie die KI-Antwort hinzu
-        messages.value.add(
-          ChatMessage(
-            text: response.replaceFirst("\n", " ").replaceFirst("\n", " "),
-            chatMessageType: ChatMessageType.bot,
-          ),
-        );
-        update();  // Aktualisieren Sie den Zustand
+      // Fügen Sie die KI-Antwort hinzu
+      messages.value.add(
+        ChatMessage(
+          text: response.replaceFirst("\n", " ").replaceFirst("\n", " "),
+          chatMessageType: ChatMessageType.bot,
+        ),
+      );
+      update();  // Aktualisieren Sie den Zustand
 
-        shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
-        Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
-        itemCount.value = messages.value.length;
-      });
-    } else {
-      ApiServices.generateResponse2(input).then((response) {
-        // Überprüfen Sie, ob der Wert null oder leer ist
-        if (response == null || response.trim().isEmpty) {
-          debugPrint("API Response is null or empty");
-          return; // Beenden Sie die Methode, wenn der Wert null oder leer ist
-        }
-
-        isLoading.value = false;
-
-        // Entfernen Sie die temporäre Nachricht
-        messages.value.removeLast();
-
-        // Fügen Sie die KI-Antwort hinzu
-        messages.value.add(
-          ChatMessage(
-            text: response.replaceFirst("\n", " ").replaceFirst("\n", " "),
-            chatMessageType: ChatMessageType.bot,
-          ),
-        );
-        update();  // Aktualisieren Sie den Zustand
-
-        debugPrint("---------------Chat Response------------------");
-        debugPrint("RECEIVED");
-        debugPrint(response);
-        debugPrint("---------------END------------------");
-
-        shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
-        Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
-        itemCount.value = messages.value.length;
-      });
-    }
+      shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
+      Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
+      itemCount.value = messages.value.length;
+    });
   }
-
 
   RxString textInput = ''.obs;
 
@@ -193,17 +143,16 @@ class ChatController extends GetxController {
     speechStopMethod();
 
     addTextCount();
+
+    // Benutzernachricht hinzufügen
     messages.value.add(
       ChatMessage(
-        text: "Lynn's Zauberhut ist auf... die Antwort kommt gleich!",
-        chatMessageType: ChatMessageType.bot,
+        text: textInput.value, // Dies sollte die tatsächliche Nachricht des Benutzers sein
+        chatMessageType: ChatMessageType.user, // Dies sollte der Nachrichtentyp des Benutzers sein
       ),
     );
     shareMessages.add('${Strings.regeneratingResponse.tr} -Myself\n');
     itemCount.value = messages.value.length;
-    isLoading.value = true;
-
-    update();
 
     Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
     update();
@@ -213,6 +162,7 @@ class ChatController extends GetxController {
     chatController.clear();
     update();
   }
+
 
   void scrollDown() {
     scrollController.animateTo(
