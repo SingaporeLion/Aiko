@@ -134,7 +134,7 @@ class ChatMessageWidget extends StatelessWidget {
                 child: CircleAvatar(
                   backgroundColor: Colors.transparent,
                   child: Image.asset(
-                    Assets.bot,
+                    'assets/bot2.png', // Hier haben wir den Pfad geändert
                   ),
                 ),
               )
