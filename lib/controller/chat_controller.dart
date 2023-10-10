@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:lottie/lottie.dart';
 
 import '../helper/notification_helper.dart';
 import '../helper/unity_ad.dart';
@@ -24,6 +25,15 @@ class ChatController extends GetxController {
   Timer? timer;
 
   late List<QueryDocumentSnapshot<Map<String, dynamic>>> suggestedData;
+
+  Widget waitingResponseWidget() {
+    return Column(
+      children: [
+        Lottie.asset('assets/heart.json', width: 100, height: 100), // Sie können die Größe nach Bedarf anpassen
+        Text("Antwort im Anflug... "),
+      ],
+    );
+  }
 
   @override
 
@@ -102,7 +112,18 @@ class ChatController extends GetxController {
     update();
   }
 
+
+
   void _apiProcess(String input) {
+    // Fügen Sie die temporäre Nachricht (Text + Emoji) hinzu
+    messages.value.add(
+      ChatMessage(
+        widget: waitingResponseWidget(),
+        chatMessageType: ChatMessageType.bot,
+      ),
+    );
+    isLoading.value = true;  // Starten Sie die 3-Punkte-Animation
+    update();  // Aktualisieren Sie den Zustand
 
     ApiServices.generateResponse2(input).then((response) {
       // Überprüfen Sie, ob der Wert null oder leer ist

@@ -23,6 +23,15 @@ class ChatScreen extends StatelessWidget {
 
   final controller = Get.put(ChatController());
 
+  Widget waitingResponseWidget() {
+    return Column(
+      children: [
+        Lottie.asset('assets/heart.json', width: 100, height: 100), // Sie können die Größe nach Bedarf anpassen
+        Text("Antwort im Anflug..."),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -48,7 +57,7 @@ class ChatScreen extends StatelessWidget {
   }
 
 
-  _mainBody(BuildContext context) {
+  Widget _mainBody(BuildContext context) {
     return Obx(
           () => Column(
         children: [
@@ -57,12 +66,7 @@ class ChatScreen extends StatelessWidget {
             child: _buildList(),
           ),
           controller.isLoading.value
-              ? Column(
-            children: [
-              const CustomLoadingAPI(), // 3-Punkte-Animation
-              Text("Antwort im Anflug... 🐦"),
-            ],
-          )
+              ? waitingResponseWidget() // Hier ersetzen wir die alte Animation und den Text durch die neue Funktion
               : Container(),
           Expanded(flex: 0, child: _submitButton(context)),
           SizedBox(height: Dimensions.heightSize)
@@ -70,7 +74,6 @@ class ChatScreen extends StatelessWidget {
       ),
     );
   }
-
 
   _submitButton(BuildContext context) {
     var value = 5 - controller.count.value;
@@ -244,14 +247,14 @@ class ChatScreen extends StatelessWidget {
             },
             onLongPress: () {
               Clipboard.setData(ClipboardData(
-                  text: controller.messages.value[index].text));
+                  text: controller.messages.value[index].text ?? ""));
             },
             onSpeech: () {
-              controller.speechMethod(controller.messages.value[index].text,
+              controller.speechMethod(controller.messages.value[index].text ?? "",
                   '${languageList[0]}-${languageList[1]}');
               controller.voiceSelectedIndex.value = index;
             },
-            text: controller.messages.value[index].text,
+            text: controller.messages.value[index].text ?? "",
             chatMessageType:
             controller.messages.value[index].chatMessageType,
             index: index);

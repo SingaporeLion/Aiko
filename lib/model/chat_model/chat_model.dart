@@ -1,11 +1,15 @@
+import 'package:flutter/widgets.dart';
+
 enum ChatMessageType { user, bot }
 
 class ChatMessage {
   ChatMessage({
-    required this.text,
+    this.text,
+    this.widget,
     required this.chatMessageType,
   });
 
-  final String text;
+  final String? text;
+  final Widget? widget;
   final ChatMessageType chatMessageType;
 }
