@@ -23,6 +23,9 @@ import 'utils/Flutter Theam/themes.dart';
 import 'utils/language/local_string.dart';
 import 'utils/strings.dart';
 
+String? userName;
+String? userGender;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -38,38 +41,19 @@ void main() async {
     );
   }
 
-  SystemChrome.setPreferredOrientations([
-    // Locking Device Orientation
-    DeviceOrientation.portraitDown,
-    DeviceOrientation.portraitUp,
-  ]);
-
-  NotificationHelper.initialization();
-  NotificationHelper.requestPermission();
-  NotificationHelper.getBackgroundNotification();
-
-  StatusService.init();
-
-  appleSignInAvailable.check();
-
+  // Laden der SharedPreferences-Daten
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? userName = prefs.getString('userName');
-  String? userGender = prefs.getString('userGender');
-  String initialRoute = userName != null && userGender != null ? Routes.secondWelcomeScreen : Routes.welcomeScreen;
+  userName = prefs.getString('userName');
+  userGender = prefs.getString('userGender');
 
-  runApp(MyApp(initialRoute: initialRoute));
-
+  runApp(const MyApp());
 }
 
-// This widget is the root of your application.
 class MyApp extends StatelessWidget {
-  final String initialRoute;
-
-  const MyApp({required this.initialRoute, Key? key}) : super(key: key);
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-
     return ScreenUtilInit(
       designSize: const Size(414, 896),
       builder: (_, child) => GetMaterialApp(
@@ -79,7 +63,9 @@ class MyApp extends StatelessWidget {
         darkTheme: Themes.dark,
         themeMode: Themes().theme,
         navigatorKey: Get.key,
-        initialRoute: initialRoute,  // Hier geändert
+        initialRoute: userName != null && userGender != null
+            ? '/secondWelcome'
+            : '/welcome',
         getPages: Pages.list,
         translations: LocalString(),
         locale: const Locale('en', 'US'),
@@ -88,9 +74,10 @@ class MyApp extends StatelessWidget {
           return MediaQuery(
             data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
             child: widget!,
-          ); // Locking Device Orientation
+          );
         },
       ),
     );
   }
 }
+
