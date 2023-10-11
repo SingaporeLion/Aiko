@@ -1,5 +1,6 @@
 class Assets {
   static const String bot = 'assets/logo/bot.png';
+  static const String bot2 = 'assets/logo/bot2.png';
   static const String menCartoon = 'assets/person.png';
 
   static const String messages = 'assets/icon/messages.svg';

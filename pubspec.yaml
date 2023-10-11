@@ -15,6 +15,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  video_player: ^2.7.2
   lottie: ^2.6.0
   rive: ^0.11.17
   shared_preferences: ^2.2.1  # Fügen Sie die neueste Version hinzu. Überprüfen Sie https://pub.dev/packages/shared_preferences für die neueste Version.
