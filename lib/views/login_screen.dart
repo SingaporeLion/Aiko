@@ -10,6 +10,8 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   late TextEditingController _nameController;
   late TextEditingController _ageController;
+  String _greetingMessageTop = '';
+  String _greetingMessageBottom = '';
   String? _selectedGender;
   String? _greetingMessage;
 
@@ -28,9 +30,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     if (userName != null && userGender != null) {
       setState(() {
-        _greetingMessage = userGender == 'Mädchen'
-            ? 'Schön Dich wiederzusehen, liebe $userName!'
-            : 'Schön Dich wiederzusehen, lieber $userName!';
+        _greetingMessageTop = 'Schön Dich wiederzusehen,';
+        _greetingMessageBottom = userGender == 'Mädchen'
+            ? 'liebe $userName!'
+            : 'lieber $userName!';
       });
     }
   }
@@ -43,7 +46,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.pink[100]!, Colors.blue[100]!],
+            colors: [Colors.purple[800]!, Colors.purple[700]!, Colors.blue[600]!, Colors.blue[300]!],
           ),
         ),
         child: Center(
@@ -53,7 +56,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               children: [
                 Image.asset('assets/logo/bot.png', height: 350, width: 250,),
                 Text(
-                  'Hallo großer Entdecker! 🌟',
+                  'Hallo großer Entdecker 🌟',
                   style: TextStyle(
                     fontFamily: 'Pacifico',
                     fontSize: 24,
@@ -61,12 +64,25 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                 ),
                 SizedBox(height: 20),
-                if (_greetingMessage != null) ...[
-                  Text(_greetingMessage!, style: TextStyle(
-                    fontFamily: 'Pacifico',
-                    fontSize: 24,
-                    color: Colors.white,
-                  )),
+                if (_greetingMessageTop != null && _greetingMessageBottom != null) ...[
+                  Text(
+                    _greetingMessageTop,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Pacifico',
+                      fontSize: 24,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    _greetingMessageBottom,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Pacifico',
+                      fontSize: 24,
+                      color: Colors.white,
+                    ),
+                  ),
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
@@ -174,6 +190,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15.0),
                       ),
+                      minimumSize: Size(200, 60), // Hier können Sie die Größe anpassen
                     ),
                   ),
                 ],
