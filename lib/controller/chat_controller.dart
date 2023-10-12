@@ -1,17 +1,13 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../helper/local_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:lottie/lottie.dart';
-
 import '../helper/notification_helper.dart';
 import '../helper/unity_ad.dart';
 import '../model/chat_model/chat_model.dart';
@@ -23,42 +19,32 @@ import '../widgets/api/custom_loading_api.dart';
 
 class ChatController extends GetxController {
   Timer? timer;
-
   late List<QueryDocumentSnapshot<Map<String, dynamic>>> suggestedData;
 
   Widget waitingResponseWidget() {
     return Column(
       children: [
-        Lottie.asset('assets/heart.json', width: 100, height: 100), // Sie können die Größe nach Bedarf anpassen
+        Lottie.asset('assets/heart.json', width: 100, height: 100),
         Text("Antwort im Anflug... "),
       ],
     );
   }
 
   @override
-
   void onInit() {
     getSuggestedCategory();
-
     NotificationHelper.initInfo();
-
     speech = stt.SpeechToText();
     LocalStorage.isLoggedIn() ? _getUserData() : _setGesutUser();
-
     count.value = LocalStorage.getTextCount();
-
     super.onInit();
-
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       await AdManager.loadUnityIntAd();
-      // await AdManager.loadUnityRewardedAd();
     });
   }
 
   final chatController = TextEditingController();
   final scrollController = ScrollController();
-
-  // final RxList messages = <ChatMessage>[].obs;
   Rx<List<ChatMessage>> messages = Rx<List<ChatMessage>>([]);
   List<String> shareMessages = [
     '--THIS IS CONVERSATION with ${Strings.appName}--\n\n'
@@ -67,91 +53,69 @@ class ChatController extends GetxController {
   RxInt voiceSelectedIndex = 0.obs;
   RxBool isLoading = false.obs;
   RxBool isLoading2 = false.obs;
-
   late UserModel userModel;
-
   final List<String> moreList = [
     Strings.regenerateResponse.tr,
     Strings.clearConversation.tr,
     Strings.share.tr,
     Strings.changeTextModel.tr,
   ];
+
   void addTextCount() {
-    // Hier den Code einfügen, der die Textanzahl erhöht oder aktualisiert.
-    count.value += 1; // Als einfaches Beispiel, um den Zähler zu erhöhen.
+    count.value += 1;
   }
 
   void proccessChat() async {
     speechStopMethod();
     addTextCount();
-
-    // Benutzernachricht hinzufügen
     messages.value.add(
       ChatMessage(
-        text: chatController.text, // Dies sollte die tatsächliche Nachricht des Benutzers sein
-        chatMessageType: ChatMessageType.user, // Dies sollte der Nachrichtentyp des Benutzers sein
+        text: chatController.text,
+        chatMessageType: ChatMessageType.user,
       ),
     );
     shareMessages.add("${chatController.text} - Myself\n");
     itemCount.value = messages.value.length;
-
     isLoading.value = true;
-
     var input = chatController.text;
     textInput.value = chatController.text;
     chatController.clear();
     update();
-
     Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
     update();
-
     _apiProcess(input);
-
     chatController.clear();
-
     update();
   }
 
-
-
   void _apiProcess(String input) {
-    // Fügen Sie die temporäre Nachricht (Text + Emoji) hinzu
     messages.value.add(
       ChatMessage(
         widget: waitingResponseWidget(),
         chatMessageType: ChatMessageType.bot,
       ),
     );
-    isLoading.value = true;  // Starten Sie die 3-Punkte-Animation
-    update();  // Aktualisieren Sie den Zustand
-
+    isLoading.value = true;
+    update();
     ApiServices.generateResponse2(input).then((response) {
-      // Überprüfen Sie, ob der Wert null oder leer ist
       if (response == null || response.trim().isEmpty) {
         debugPrint("API Response is null or empty");
-        isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
-        return; // Beenden Sie die Methode, wenn der Wert null oder leer ist
+        isLoading.value = false;
+        return;
       }
-
-      isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
+      isLoading.value = false;
       debugPrint("---------------Chat Response------------------");
       debugPrint("RECEIVED");
       debugPrint(response);
       debugPrint("---------------END------------------");
-
-      // Sobald die Antwort der KI eintrifft:
-      // Entfernen Sie die temporäre Nachricht
       messages.value.removeLast();
-
-      // Fügen Sie die KI-Antwort hinzu
       messages.value.add(
         ChatMessage(
           text: response.replaceFirst("\n", " ").replaceFirst("\n", " "),
           chatMessageType: ChatMessageType.bot,
         ),
       );
-      update();  // Aktualisieren Sie den Zustand
-
+      update();
       shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
       Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
       itemCount.value = messages.value.length;
@@ -162,28 +126,21 @@ class ChatController extends GetxController {
 
   void proccessChat2() async {
     speechStopMethod();
-
     addTextCount();
-
-    // Benutzernachricht hinzufügen
     messages.value.add(
       ChatMessage(
-        text: textInput.value, // Dies sollte die tatsächliche Nachricht des Benutzers sein
-        chatMessageType: ChatMessageType.user, // Dies sollte der Nachrichtentyp des Benutzers sein
+        text: textInput.value,
+        chatMessageType: ChatMessageType.user,
       ),
     );
     shareMessages.add('${Strings.regeneratingResponse.tr} -Myself\n');
     itemCount.value = messages.value.length;
-
     Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
     update();
-
     _apiProcess(textInput.value);
-
     chatController.clear();
     update();
   }
-
 
   void scrollDown() {
     scrollController.animateTo(
@@ -195,18 +152,12 @@ class ChatController extends GetxController {
 
   RxString userInput = "".obs;
   RxString result = "".obs;
-
-  //  on Init  speech = stt.SpeechToText();
-
   RxBool isListening = false.obs;
-
   var languageList = LocalStorage.getLanguage();
-
   late stt.SpeechToText speech;
 
   void listen(BuildContext context) async {
     speechStopMethod();
-
     chatController.text = '';
     result.value = '';
     userInput.value = '';
@@ -216,7 +167,7 @@ class ChatController extends GetxController {
         onError: (val) => debugPrint('### onError: $val'),
       );
       if (available) {
-        isListening.value = true;
+        isListening.value         = true;
         speech.listen(
             localeId: languageList[0],
             onResult: (val) {
@@ -339,7 +290,6 @@ class ChatController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance; // firebase instance/object
   User get user => _auth.currentUser!;
   RxInt count = 0.obs;
-
 
   getSuggestedCategory() async {
     isLoading2.value = true;
