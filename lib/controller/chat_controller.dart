@@ -66,6 +66,14 @@ class ChatController extends GetxController {
   }
 
   @override
+
+  void setContextForLynn() {
+    String initialPrompt = "Du bist Lynn, ein 10-jähriges Mädchen. Du bist immer freundlich, mitfühlend, lustig und versuchst, wie eine beste Freundin zu sein.";
+    ApiServices.generateResponse2(initialPrompt).then((response) {
+      // Verarbeiten Sie die Antwort hier, falls nötig
+    });
+  }
+
   void onInit() {
     getSuggestedCategory();
     NotificationHelper.initInfo();
@@ -142,13 +150,17 @@ class ChatController extends GetxController {
     isLoading.value = true;  // Starten Sie die 3-Punkte-Animation
     update();
 
+    // Kontext beibehalten und Eingabeaufforderungen beeinflussen
+    String context = recentMessages.join(' ');  // Kombinieren Sie die letzten Nachrichten zu einem String
+    String modifiedInput = "Als Lynn, das 10-jährige Mädchen, nachdem du gesagt hast: '$context', $input";
+
     // Überprüfen Sie, ob die Nachricht an Lynn gerichtet ist
     if (input.toLowerCase().contains("lynn")) {
       // Annahme: userAge und userGender sind bereits definiert und enthalten die entsprechenden Werte
       String lynnResponse = lynn.respondToUser(input, userName, userAge, userGender);
       _addBotResponse(lynnResponse);
     } else {
-      ApiServices.generateResponse2(input).then((response) {
+      ApiServices.generateResponse2(modifiedInput).then((response) {
         // Überprüfen Sie, ob der Wert null oder leer ist
         if (response == null || response.trim().isEmpty) {
           debugPrint("API Response is null or empty");
