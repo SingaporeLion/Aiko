@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use, depend_on_referenced_packages
-
 import 'utils/config.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -8,9 +6,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:AIKO/views/login_screen.dart';
-import 'package:AIKO/views/SecondWelcomeScreen.dart';
 
 import 'helper/unity_ad.dart';
 import 'services/apple_sign_in/apple_sign_in_available.dart';
@@ -22,9 +17,6 @@ import 'routes/routes.dart';
 import 'utils/Flutter Theam/themes.dart';
 import 'utils/language/local_string.dart';
 import 'utils/strings.dart';
-
-String? userName;
-String? userGender;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,10 +33,19 @@ void main() async {
     );
   }
 
-  // Laden der SharedPreferences-Daten
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  userName = prefs.getString('userName');
-  userGender = prefs.getString('userGender');
+  SystemChrome.setPreferredOrientations([
+    // Locking Device Orientation
+    DeviceOrientation.portraitDown,
+    DeviceOrientation.portraitUp,
+  ]);
+
+  NotificationHelper.initialization();
+  NotificationHelper.requestPermission();
+  NotificationHelper.getBackgroundNotification();
+
+  StatusService.init();
+
+  appleSignInAvailable.check();
 
   runApp(const MyApp());
 }
@@ -63,9 +64,7 @@ class MyApp extends StatelessWidget {
         darkTheme: Themes.dark,
         themeMode: Themes().theme,
         navigatorKey: Get.key,
-        initialRoute: userName != null && userGender != null
-            ? '/secondWelcome'
-            : '/welcome',
+        initialRoute: Routes.welcomeScreen,
         getPages: Pages.list,
         translations: LocalString(),
         locale: const Locale('en', 'US'),
@@ -74,10 +73,13 @@ class MyApp extends StatelessWidget {
           return MediaQuery(
             data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
             child: widget!,
-          );
+          ); // Locking Device Orientation
         },
       ),
     );
   }
 }
+
+
+
 
