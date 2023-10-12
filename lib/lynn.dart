@@ -1,10 +1,20 @@
 import 'dart:math';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Lynn {
   final String name = "Lynn";
   final int age = 10;
   final String gender = "Mädchen";
   final String personalityDescription = "Ein aufgewecktes, fröhliches und liebevolles Kind, das es liebt zuzuhören und Ratschläge zu geben.";
+
+  Future<Map<String, dynamic>> getUserDetails() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return {
+      'userName': prefs.getString('userName') ?? 'Freund',
+      'userAge': prefs.getInt('userAge') ?? 0,
+      'userGender': prefs.getString('userGender') ?? 'unbekannt'
+    };
+  }
 
   List<String> greetings(String userName) => [
     "Hallo $userName! Wie geht's dir heute?",
@@ -47,7 +57,7 @@ class Lynn {
     recentInteractions.add(interaction);
   }
 
-  String respondToUser(String userInput, String userName) {
+  String respondToUser(String userInput, String userName, int userAge, String userGender) {
     addUserInteraction(userInput);
 
     if (userInput.contains("Schule")) {
@@ -56,6 +66,13 @@ class Lynn {
       return "Oh nein, warum fühlst du dich traurig? Ich bin hier, um zuzuhören.";
     } else if (recentInteractions.contains("glücklich") || userInput.contains("glücklich")) {
       return "Das ist toll zu hören! Was hat dich heute so glücklich gemacht?";
+    } else if (userInput.contains("Geburtstag")) {
+      int nextAge = userAge + 1;
+      return "Oh, wirst du bald $nextAge? Das ist aufregend!";
+    } else if (userGender == "Mädchen" && userInput.contains("Tanz")) {
+      return "Tanzen ist so viel Spaß! Welche Art von Tanz magst du am liebsten?";
+    } else if (userGender == "Junge" && userInput.contains("Fußball")) {
+      return "Fußball ist ein tolles Spiel! Spielst du in einem Team?";
     } else {
       return greetUser(userName);
     }

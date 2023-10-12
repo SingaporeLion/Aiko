@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math'; // Für die Zufallsgenerierung
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../helper/local_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,10 +17,44 @@ import '../services/api_services.dart';
 import '../utils/strings.dart';
 import 'main_controller.dart';
 import '../widgets/api/custom_loading_api.dart';
+import '../lynn.dart'; // Importieren Sie die Lynn-Klasse
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatController extends GetxController {
+
+  // Instanzvariablen
+  List<String> recentMessages = [];
   Timer? timer;
+  Lynn lynn = Lynn(); // Erstellen Sie eine Instanz von Lynn
   late List<QueryDocumentSnapshot<Map<String, dynamic>>> suggestedData;
+
+  // Hier fügen Sie die neuen Instanzvariablen ein
+  late String userName;
+  late int userAge;
+  late String userGender;
+
+  // Methoden
+  Future<void> loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    userName = prefs.getString('userName') ?? 'Freund';
+    userAge = prefs.getInt('userAge') ?? 0;
+    userGender = prefs.getString('userGender') ?? 'unbekannt';
+  }
+
+  Future<String> getUserName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userName') ?? 'Freund';
+  }
+
+  Future<int> getUserAge() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('userAge') ?? 0; // 0 als Standardwert, falls kein Alter gespeichert ist
+  }
+
+  Future<String> getUserGender() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userGender') ?? 'unbekannt';
+  }
 
   Widget waitingResponseWidget() {
     return Column(
@@ -68,6 +103,8 @@ class ChatController extends GetxController {
   void proccessChat() async {
     speechStopMethod();
     addTextCount();
+
+    // Benutzernachricht hinzufügen
     messages.value.add(
       ChatMessage(
         text: chatController.text,
@@ -76,51 +113,80 @@ class ChatController extends GetxController {
     );
     shareMessages.add("${chatController.text} - Myself\n");
     itemCount.value = messages.value.length;
+
     isLoading.value = true;
+
     var input = chatController.text;
+    recentMessages.add(input); // Fügen Sie die Benutzernachricht zur Liste hinzu
     textInput.value = chatController.text;
     chatController.clear();
     update();
+
     Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
     update();
+
     _apiProcess(input);
+
     chatController.clear();
     update();
   }
 
   void _apiProcess(String input) {
+    // Fügen Sie die temporäre Nachricht (Text + Emoji) hinzu
     messages.value.add(
       ChatMessage(
         widget: waitingResponseWidget(),
         chatMessageType: ChatMessageType.bot,
       ),
     );
-    isLoading.value = true;
+    isLoading.value = true;  // Starten Sie die 3-Punkte-Animation
     update();
-    ApiServices.generateResponse2(input).then((response) {
-      if (response == null || response.trim().isEmpty) {
-        debugPrint("API Response is null or empty");
-        isLoading.value = false;
-        return;
-      }
-      isLoading.value = false;
-      debugPrint("---------------Chat Response------------------");
-      debugPrint("RECEIVED");
-      debugPrint(response);
-      debugPrint("---------------END------------------");
-      messages.value.removeLast();
-      messages.value.add(
-        ChatMessage(
-          text: response.replaceFirst("\n", " ").replaceFirst("\n", " "),
-          chatMessageType: ChatMessageType.bot,
-        ),
-      );
-      update();
-      shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
-      Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
-      itemCount.value = messages.value.length;
-    });
+
+    // Überprüfen Sie, ob die Nachricht an Lynn gerichtet ist
+    if (input.toLowerCase().contains("lynn")) {
+      // Annahme: userAge und userGender sind bereits definiert und enthalten die entsprechenden Werte
+      String lynnResponse = lynn.respondToUser(input, userName, userAge, userGender);
+      _addBotResponse(lynnResponse);
+    } else {
+      ApiServices.generateResponse2(input).then((response) {
+        // Überprüfen Sie, ob der Wert null oder leer ist
+        if (response == null || response.trim().isEmpty) {
+          debugPrint("API Response is null or empty");
+          isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
+          return; // Beenden Sie die Methode, wenn der Wert null oder leer ist
+        }
+
+        _addBotResponse(response);
+      });
+    }
   }
+
+
+  void _addBotResponse(String response) {
+    isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
+    debugPrint("---------------Chat Response------------------");
+    debugPrint("RECEIVED");
+    debugPrint(response);
+    debugPrint("---------------END------------------");
+
+    // Sobald die Antwort der KI eintrifft:
+    // Entfernen Sie die temporäre Nachricht
+    messages.value.removeLast();
+
+    // Fügen Sie die KI-Antwort hinzu
+    messages.value.add(
+      ChatMessage(
+        text: response.replaceFirst("\n", " ").replaceFirst("\n", " "),
+        chatMessageType: ChatMessageType.bot,
+      ),
+    );
+    update();  // Aktualisieren Sie den Zustand
+
+    shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
+    Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
+    itemCount.value = messages.value.length;
+  }
+
 
   RxString textInput = ''.obs;
 
