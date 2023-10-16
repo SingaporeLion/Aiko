@@ -61,7 +61,7 @@ class _SendInputFieldState extends State<SendInputField> {
                         : Theme.of(context).primaryColor.withOpacity(0.1),
                     width: 1
                 ),
-                color: Colors.transparent,
+                color: Colors.white.withOpacity(0.8), // Änderung hier
                 borderRadius: BorderRadius.circular(Dimensions.radius * 0.7),
               ),
               child: TextFormField(

@@ -67,13 +67,6 @@ class ChatController extends GetxController {
 
   @override
 
-  void setContextForLynn() {
-    String initialPrompt = "Du bist Lynn, ein 10-jähriges Mädchen. Du bist immer freundlich, mitfühlend, lustig und versuchst, wie eine beste Freundin zu sein.";
-    ApiServices.generateResponse2(initialPrompt).then((response) {
-      // Verarbeiten Sie die Antwort hier, falls nötig
-    });
-  }
-
   void onInit() {
     getSuggestedCategory();
     NotificationHelper.initInfo();
@@ -150,27 +143,28 @@ class ChatController extends GetxController {
     isLoading.value = true;  // Starten Sie die 3-Punkte-Animation
     update();
 
-    // Kontext beibehalten und Eingabeaufforderungen beeinflussen
-    String context = recentMessages.join(' ');  // Kombinieren Sie die letzten Nachrichten zu einem String
-    String modifiedInput = "Als Lynn, das 10-jährige Mädchen, nachdem du gesagt hast: '$context', $input";
+    List<Map<String, dynamic>> messageslist = [
+      {
+        "role": "system",
+        "content": "Du bist ein 10-jähriges Mädchen namens Lynn! Schreibe auf Fragen und Antworten wie es Lynn tun würde. Du schreibst wie ein 10 jähriges Kind. Du bist freundlich, hilfsbereit und lustig. Du bist keine KI. Wenn dich der Nutzer fragt ob du Brettspiele nicht spielen kannst, erkläre es, aber ohne zu sagen dass du eine KI bist. Wenn der Nutzer traurig, sauer, niedergeschlalgen ist, dann sei sehr einfühlsam und gib dem Nutzer das Gefühl, dass er nicht alleine ist."
+      },
+      {
+        "role": "user",
+        "content": input
+      }
+    ];
 
-    // Überprüfen Sie, ob die Nachricht an Lynn gerichtet ist
-    if (input.toLowerCase().contains("lynn")) {
-      // Annahme: userAge und userGender sind bereits definiert und enthalten die entsprechenden Werte
-      String lynnResponse = lynn.respondToUser(input, userName, userAge, userGender);
-      _addBotResponse(lynnResponse);
-    } else {
-      ApiServices.generateResponse2(modifiedInput).then((response) {
-        // Überprüfen Sie, ob der Wert null oder leer ist
-        if (response == null || response.trim().isEmpty) {
-          debugPrint("API Response is null or empty");
-          isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
-          return; // Beenden Sie die Methode, wenn der Wert null oder leer ist
-        }
+    ApiServices.generateResponse2(messageslist).then((response) {
 
-        _addBotResponse(response);
-      });
-    }
+      // Überprüfen Sie, ob der Wert null oder leer ist
+      if (response == null || response.trim().isEmpty) {
+        debugPrint("API Response is null or empty");
+        isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
+        return; // Beenden Sie die Methode, wenn der Wert null oder leer ist
+      }
+
+      _addBotResponse(response);
+    });
   }
 
 

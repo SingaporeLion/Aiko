@@ -51,7 +51,7 @@ class ContentController extends GetxController {
 
   _apiProcess(String input){
 
-      ApiServices.generateResponse2(input).then((value) {
+    ApiServices.generateResponse2([{"role": "user", "content": input}]).then((value) {
         isLoading.value = false;
         update();
         debugPrint("---------------Content Response------------------");

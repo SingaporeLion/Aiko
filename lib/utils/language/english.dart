@@ -4,9 +4,9 @@ import '../strings.dart';
 class English {
   static const String appName = Strings.appName;
 
-  static const String chatWithAIKO = "Chatte mit $appName";
+  static const String chatWithAIKO = "Chatte mit Lynn";
   static const String chatWithAIKOSubTitle =
-      "Mit $appName zu plaudern ist wie mit einem Freund zu sprechen. Es macht nicht nur Spaß, sondern hilft dir auch, Neues zu entdecken und zu lernen.";
+      "Mit Lynn zu plaudern ist wie mit einem Freund zu sprechen. Es macht nicht nur Spaß, sondern hilft dir auch, Neues zu entdecken und zu lernen.";
   static const String settings = "Meine Einstellungen";
   static const String token = "Token";
   static const String cancel = "Cancel";
@@ -15,11 +15,11 @@ class English {
   static const String subscriptionPlan = "Subscription Plan";
   static const String freeSubscription = "Free Subscription";
   static const String notIncluded = "Not Included";
-  static const String limitedChatting = "Limited Chatting With $appName";
+  static const String limitedChatting = "Limited Chatting With Lynn";
   static const String limitedCImage = "Limited Image Generate";
-  static String basicChatting = "${ApiConfig.freeMessageLimit.toString()} Chatting With $appName";
+  static String basicChatting = "${ApiConfig.freeMessageLimit.toString()} Chatting With Lynn";
   static String basicImage = "${ApiConfig.freeImageGenLimit.toString()} Image Generate";
-  static String unlimitedChatting = "${ApiConfig.premiumMessageLimit.toString()} Chatting With Chatting With $appName";
+  static String unlimitedChatting = "${ApiConfig.premiumMessageLimit.toString()} Chatting With Chatting With Lynn";
   static String unlimitedImage = "${ApiConfig.premiumImageGenLimit.toString()} Image Generate";
   static const String freeSupport = "Free Support";
   static const String premiumSubscription = "Premium Subscription";

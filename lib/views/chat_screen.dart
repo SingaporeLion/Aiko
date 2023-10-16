@@ -23,6 +23,14 @@ class ChatScreen extends StatelessWidget {
 
   final controller = Get.put(ChatController());
 
+  final gradientDecoration = BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Colors.purple[800]!, Colors.purple[700]!, Colors.blue[600]!, Colors.blue[300]!],
+    ),
+  );
+
   Widget waitingResponseWidget() {
     return Column(
       children: [
@@ -34,6 +42,14 @@ class ChatScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final gradientDecoration = BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Colors.purple[800]!, Colors.purple[700]!, Colors.blue[600]!, Colors.blue[300]!],
+      ),
+    );
+
     return WillPopScope(
       onWillPop: () async {
         await controller.speechStopMethod();
@@ -51,10 +67,14 @@ class ChatScreen extends StatelessWidget {
             _showDialog(context);
           },
         ),
-        body: _mainBody(context),
+        body: Container(
+          decoration: gradientDecoration, // Setzen Sie den Gradienten als Hintergrund
+          child: _mainBody(context),
+        ),
       ),
     );
   }
+
 
 
   Widget _mainBody(BuildContext context) {

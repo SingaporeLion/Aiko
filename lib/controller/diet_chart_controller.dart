@@ -113,8 +113,7 @@ class DietChartController extends GetxController {
   }
 
   _apiProcess(String input, context) async {
-    await ApiServices.generateResponse2(input)
-        .then((value) {
+    await ApiServices.generateResponse2([{"role": "user", "content": input}]).then((value) {
       textResponse.value = "";
       isLoading.value = true;
       update();
