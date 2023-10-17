@@ -7,7 +7,7 @@ import '../helper/local_storage.dart';
 
 class ApiServices {
   // Ersetzen Sie YOUR_API_KEY durch Ihren tatsächlichen API-Schlüssel oder laden Sie ihn aus einer sicheren Quelle.
-  static const String _apiKey = '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';
+  static const String _apiKey = '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';
 
   static Future<String> generateResponse2(dynamic input) async {
     var url = Uri.https("api.openai.com", "/v1/chat/completions");

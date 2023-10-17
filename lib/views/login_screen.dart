@@ -24,9 +24,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   void _checkStoredData() {
-    String? userName = localStorage.retrieveUserName();
-    String? userAge = localStorage.retrieveUserAge();
-    String? userGender = localStorage.retrieveUserGender();
+    String? userName = LocalStorage.getString('userName');
+    String? userAge = LocalStorage.getString('userAge');
+    String? userGender = LocalStorage.getString('userGender');
 
     print("Abgerufener Benutzername: $userName");
     print("Abgerufenes Alter: $userAge");
@@ -188,9 +188,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       print("Button wurde gedrückt!");
 
                       // Daten speichern mit LocalStorage
-                      await localStorage.storeUserName(_nameController.text);
-                      await localStorage.storeUserAge(_ageController.text);
-                      await localStorage.storeUserGender(_selectedGender ?? '');
+                      await LocalStorage.setString('userName', _nameController.text);
+                      await LocalStorage.setString('userAge', _ageController.text);
+                      await LocalStorage.setString('userGender', _selectedGender ?? '');
 
                       print("Gespeicherter Benutzername: ${_nameController.text}");
                       print("Gespeichertes Alter: ${_ageController.text}");

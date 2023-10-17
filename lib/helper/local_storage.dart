@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import '/model/notification_model/notification_model.dart';
 
 const String idKey = "idKey";
@@ -64,30 +64,26 @@ const String selectedModel = "selectedModel";
 const String selectedImageType = "selectedImageType";
 
 class LocalStorage {
-  // ... andere Methoden und Eigenschaften ...
+  static SharedPreferences? _preferences;
 
-  Future<void> storeUserName(String name) async {
-    await GetStorage().write('userName', name);
+  static Future init() async {
+    _preferences = await SharedPreferences.getInstance();
   }
 
-  String? retrieveUserName() {
-    return GetStorage().read('userName');
+  static Future setString(String key, String value) async {
+    await _preferences?.setString(key, value);
   }
 
-  Future<void> storeUserAge(String age) async {
-    await GetStorage().write('userAge', age);
+  static String? getString(String key) {
+    return _preferences?.getString(key);
   }
 
-  String? retrieveUserAge() {
-    return GetStorage().read('userAge');
+  static Future setBool(String key, bool value) async {
+    await _preferences?.setBool(key, value);
   }
 
-  Future<void> storeUserGender(String gender) async {
-    await GetStorage().write('userGender', gender);
-  }
-
-  String? retrieveUserGender() {
-    return GetStorage().read('userGender');
+  static bool? getBool(String key) {
+    return _preferences?.getBool(key);
   }
 
 
