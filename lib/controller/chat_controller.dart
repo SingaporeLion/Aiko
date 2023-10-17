@@ -17,16 +17,9 @@ import '/services/api_services.dart';
 import '/utils/strings.dart';
 import 'main_controller.dart';
 import '/widgets/api/custom_loading_api.dart';
-import '/lynn.dart'; // Importieren Sie die Lynn-Klasse
 import 'package:get_storage/get_storage.dart';
 
 class ChatController extends GetxController {
-
-  // Instanzvariablen
-  List<String> recentMessages = [];
-  Timer? timer;
-  Lynn lynn = Lynn(); // Erstellen Sie eine Instanz von Lynn
-  late List<QueryDocumentSnapshot<Map<String, dynamic>>> suggestedData;
 
   // Hier fügen Sie die neuen Instanzvariablen ein
   late String userName;
@@ -81,7 +74,9 @@ class ChatController extends GetxController {
   final chatController = TextEditingController();
   final scrollController = ScrollController();
   Rx<List<ChatMessage>> messages = Rx<List<ChatMessage>>([]);
+  List<String> recentMessages = [];
   List<String> shareMessages = [
+
     '--THIS IS CONVERSATION with ${Strings.appName}--\n\n'
   ];
   RxInt itemCount = 0.obs;
@@ -89,11 +84,13 @@ class ChatController extends GetxController {
   RxBool isLoading = false.obs;
   RxBool isLoading2 = false.obs;
   late UserModel userModel;
+  late List<QueryDocumentSnapshot<Map<String, dynamic>>> suggestedData;
   final List<String> moreList = [
     Strings.regenerateResponse.tr,
     Strings.clearConversation.tr,
     Strings.share.tr,
     Strings.changeTextModel.tr,
+
   ];
 
   void addTextCount() {
@@ -298,7 +295,7 @@ class ChatController extends GetxController {
     update();
   }
 
-  _getUserData() async {
+  void _getUserData() async {
     final FirebaseAuth userAuth =
         FirebaseAuth.instance; // firebase instance/object
 
@@ -315,9 +312,12 @@ class ChatController extends GetxController {
 
     userModel = userData;
 
+    String greetingMessage = (userData.name != null && userData.name.isNotEmpty)
+        ? 'Hallo ${userData.name}!'
+        : Strings.helloGuest.tr;
     messages.value.add(
       ChatMessage(
-        text: '${Strings.hello.tr} ${userData.name}',
+        text: greetingMessage,
         chatMessageType: ChatMessageType.bot,
       ),
     );

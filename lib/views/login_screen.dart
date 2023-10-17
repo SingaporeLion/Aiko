@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:AIKO/routes/routes.dart';
-import 'package:AIKO/helper//local_storage.dart';
+import 'package:AIKO/helper/local_storage.dart';
+
 class WelcomeScreen extends StatefulWidget {
   @override
   _WelcomeScreenState createState() => _WelcomeScreenState();
@@ -13,21 +13,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   String _greetingMessageTop = '';
   String _greetingMessageBottom = '';
   String? _selectedGender;
+  final localStorage = LocalStorage();  // Erstellen Sie eine Instanz von LocalStorage
 
   @override
   void initState() {
-    print("Button wurde gedrückt!");
     super.initState();
     _nameController = TextEditingController();
     _ageController = TextEditingController();
     _checkStoredData();
-
   }
 
   void _checkStoredData() {
-    String? userName = LocalStorage().retrieveUserName();
-    String? userAge = LocalStorage().retrieveUserAge();
-    String? userGender = LocalStorage().retrieveUserGender();
+    String? userName = localStorage.retrieveUserName();
+    String? userAge = localStorage.retrieveUserAge();
+    String? userGender = localStorage.retrieveUserGender();
 
     print("Abgerufener Benutzername: $userName");
     print("Abgerufenes Alter: $userAge");
@@ -42,6 +41,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -187,10 +187,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     onPressed: () async {
                       print("Button wurde gedrückt!");
 
-                      // Daten speichern
-                      await GetStorage().write('userName', _nameController.text);
-                      await GetStorage().write('userAge', _ageController.text);
-                      await GetStorage().write('userGender', _selectedGender ?? '');
+                      // Daten speichern mit LocalStorage
+                      await localStorage.storeUserName(_nameController.text);
+                      await localStorage.storeUserAge(_ageController.text);
+                      await localStorage.storeUserGender(_selectedGender ?? '');
 
                       print("Gespeicherter Benutzername: ${_nameController.text}");
                       print("Gespeichertes Alter: ${_ageController.text}");
