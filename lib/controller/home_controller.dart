@@ -16,6 +16,7 @@ import 'main_controller.dart';
 
 
 class HomeController extends GetxController {
+
   var selectedLanguage = "".obs;
   final loginController = Get.put(LoginController());
 
@@ -23,6 +24,7 @@ class HomeController extends GetxController {
 
   @override
   void onInit() {
+    print("Button wurde gedrückt!");
     // settingsController.getAiTypesModel();
 
     NotificationHelper.initInfo();

@@ -19,6 +19,7 @@ import 'utils/language/local_string.dart';
 import 'utils/strings.dart';
 
 void main() async {
+  print("App gestartet");
   WidgetsFlutterBinding.ensureInitialized();
 
   await GetStorage.init();

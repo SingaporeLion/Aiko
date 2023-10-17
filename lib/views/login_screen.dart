@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:AIKO/routes/routes.dart';
-
+import 'package:AIKO/helper//local_storage.dart';
 class WelcomeScreen extends StatefulWidget {
   @override
   _WelcomeScreenState createState() => _WelcomeScreenState();
@@ -13,20 +13,25 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   String _greetingMessageTop = '';
   String _greetingMessageBottom = '';
   String? _selectedGender;
-  String? _greetingMessage;
 
   @override
   void initState() {
+    print("Button wurde gedrückt!");
     super.initState();
     _nameController = TextEditingController();
     _ageController = TextEditingController();
     _checkStoredData();
+
   }
 
-  void _checkStoredData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? userName = prefs.getString('userName');
-    String? userGender = prefs.getString('userGender');
+  void _checkStoredData() {
+    String? userName = LocalStorage().retrieveUserName();
+    String? userAge = LocalStorage().retrieveUserAge();
+    String? userGender = LocalStorage().retrieveUserGender();
+
+    print("Abgerufener Benutzername: $userName");
+    print("Abgerufenes Alter: $userAge");
+    print("Abgerufenes Geschlecht: $userGender");
 
     if (userName != null && userGender != null) {
       setState(() {
@@ -40,6 +45,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print("LoginScreen wird gebaut");
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -179,10 +185,17 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () async {
-                      SharedPreferences prefs = await SharedPreferences.getInstance();
-                      await prefs.setString('userName', _nameController.text);
-                      await prefs.setString('userAge', _ageController.text);
-                      await prefs.setString('userGender', _selectedGender ?? '');
+                      print("Button wurde gedrückt!");
+
+                      // Daten speichern
+                      await GetStorage().write('userName', _nameController.text);
+                      await GetStorage().write('userAge', _ageController.text);
+                      await GetStorage().write('userGender', _selectedGender ?? '');
+
+                      print("Gespeicherter Benutzername: ${_nameController.text}");
+                      print("Gespeichertes Alter: ${_ageController.text}");
+                      print("Gespeichertes Geschlecht: ${_selectedGender ?? ''}");
+
                       Navigator.pushReplacementNamed(context, Routes.homeScreen);
                     },
                     child: Text('Los geht\'s! 🚀', style: TextStyle(fontFamily: 'Pacifico')),
@@ -192,7 +205,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       ),
                       minimumSize: Size(200, 60), // Hier können Sie die Größe anpassen
                     ),
-                  ),
+                  )
+
                 ],
               ],
             ),

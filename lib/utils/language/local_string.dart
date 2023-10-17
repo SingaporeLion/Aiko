@@ -42,7 +42,6 @@ class LocalString extends Translations {
           Strings.regenerateResponse: English.regenerateResponse,
           Strings.regeneratingResponse: English.regeneratingResponse,
           Strings.clearConversation: English.clearConversation,
-          Strings.helloGuest: English.helloGuest,
           Strings.hello: English.hello,
           Strings.english: English.english,
           Strings.arabic: English.arabic,

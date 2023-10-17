@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math'; // Für die Zufallsgenerierung
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../helper/local_storage.dart';
+import '/helper/local_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -9,16 +9,16 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:lottie/lottie.dart';
-import '../helper/notification_helper.dart';
-import '../helper/unity_ad.dart';
-import '../model/chat_model/chat_model.dart';
-import '../model/user_model/user_model.dart';
-import '../services/api_services.dart';
-import '../utils/strings.dart';
+import '/helper/notification_helper.dart';
+import '/helper/unity_ad.dart';
+import '/model/chat_model/chat_model.dart';
+import '/model/user_model/user_model.dart';
+import '/services/api_services.dart';
+import '/utils/strings.dart';
 import 'main_controller.dart';
-import '../widgets/api/custom_loading_api.dart';
-import '../lynn.dart'; // Importieren Sie die Lynn-Klasse
-import 'package:shared_preferences/shared_preferences.dart';
+import '/widgets/api/custom_loading_api.dart';
+import '/lynn.dart'; // Importieren Sie die Lynn-Klasse
+import 'package:get_storage/get_storage.dart';
 
 class ChatController extends GetxController {
 
@@ -33,28 +33,39 @@ class ChatController extends GetxController {
   late int userAge;
   late String userGender;
 
-  // Methoden
   Future<void> loadUserData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    userName = prefs.getString('userName') ?? 'Freund';
-    userAge = prefs.getInt('userAge') ?? 0;
-    userGender = prefs.getString('userGender') ?? 'unbekannt';
+    userName = GetStorage().read('userName') ?? 'Freund';
+    userAge = GetStorage().read('userAge') ?? 0;
+    userGender = GetStorage().read('userGender') ?? 'unbekannt';
   }
 
-  Future<String> getUserName() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('userName') ?? 'Freund';
+  @override
+  void onInit() {
+    super.onInit();
+    loadUserData();
+    getSuggestedCategory();
+    NotificationHelper.initInfo();
+    speech = stt.SpeechToText();
+    LocalStorage.isLoggedIn() ? _getUserData() : _setGesutUser();
+    count.value = LocalStorage.getTextCount();
+    super.onInit();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      await AdManager.loadUnityIntAd();
+    });
   }
 
-  Future<int> getUserAge() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt('userAge') ?? 0; // 0 als Standardwert, falls kein Alter gespeichert ist
+  String getUserName() {
+    return GetStorage().read('userName') ?? 'Freund';
   }
 
-  Future<String> getUserGender() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('userGender') ?? 'unbekannt';
+  int getUserAge() {
+    return GetStorage().read('userAge') ?? 0;
   }
+
+  String getUserGender() {
+    return GetStorage().read('userGender') ?? 'unbekannt';
+  }
+
 
   Widget waitingResponseWidget() {
     return Column(
@@ -66,18 +77,6 @@ class ChatController extends GetxController {
   }
 
   @override
-
-  void onInit() {
-    getSuggestedCategory();
-    NotificationHelper.initInfo();
-    speech = stt.SpeechToText();
-    LocalStorage.isLoggedIn() ? _getUserData() : _setGesutUser();
-    count.value = LocalStorage.getTextCount();
-    super.onInit();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      await AdManager.loadUnityIntAd();
-    });
-  }
 
   final chatController = TextEditingController();
   final scrollController = ScrollController();
@@ -133,6 +132,8 @@ class ChatController extends GetxController {
   }
 
   void _apiProcess(String input) {
+    print("Methode _apiProcess gestartet mit Eingabe: $input");
+
     // Fügen Sie die temporäre Nachricht (Text + Emoji) hinzu
     messages.value.add(
       ChatMessage(
@@ -148,6 +149,7 @@ class ChatController extends GetxController {
         "role": "system",
         "content": "Du bist ein 10-jähriges Mädchen namens Lynn! Schreibe auf Fragen und Antworten wie es Lynn tun würde. Du schreibst wie ein 10 jähriges Kind. Du bist freundlich, hilfsbereit und lustig. Du bist keine KI. Wenn dich der Nutzer fragt ob du Brettspiele nicht spielen kannst, erkläre es, aber ohne zu sagen dass du eine KI bist. Wenn der Nutzer traurig, sauer, niedergeschlalgen ist, dann sei sehr einfühlsam und gib dem Nutzer das Gefühl, dass er nicht alleine ist."
       },
+
       {
         "role": "user",
         "content": input

@@ -18,6 +18,7 @@ class LoginController extends GetxController {
 
   /// auth sector
   signInWithGoogle(BuildContext context) async {
+    print("Button wurde gedrückt!");
     _isLoading.value = true;
     update();
 

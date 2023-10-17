@@ -15,11 +15,11 @@ class English {
   static const String subscriptionPlan = "Subscription Plan";
   static const String freeSubscription = "Free Subscription";
   static const String notIncluded = "Not Included";
-  static const String limitedChatting = "Limited Chatting With Lynn";
+  static const String limitedChatting = "Limited Chatte Mit Lynn";
   static const String limitedCImage = "Limited Image Generate";
-  static String basicChatting = "${ApiConfig.freeMessageLimit.toString()} Chatting With Lynn";
+  static String basicChatting = "${ApiConfig.freeMessageLimit.toString()} Chatte mit Lynn";
   static String basicImage = "${ApiConfig.freeImageGenLimit.toString()} Image Generate";
-  static String unlimitedChatting = "${ApiConfig.premiumMessageLimit.toString()} Chatting With Chatting With Lynn";
+  static String unlimitedChatting = "${ApiConfig.premiumMessageLimit.toString()}  Chatting Mit Lynn";
   static String unlimitedImage = "${ApiConfig.premiumImageGenLimit.toString()} Image Generate";
   static const String freeSupport = "Free Support";
   static const String premiumSubscription = "Premium Subscription";
@@ -39,7 +39,6 @@ class English {
   static const String regeneratingResponse = "Regenerating Response..";
   static const String clearConversation = "Clear Conversation";
   static const String hello = "Hey";
-  static const String helloGuest = "Hallo, mein Name ist Lynn. Schön das du hier bist.";
 
   static const String english = "English";
   static const String arabic = "Arabic";

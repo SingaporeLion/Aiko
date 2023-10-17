@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
-import '../model/notification_model/notification_model.dart';
+import '/model/notification_model/notification_model.dart';
 
 const String idKey = "idKey";
 
@@ -64,6 +64,33 @@ const String selectedModel = "selectedModel";
 const String selectedImageType = "selectedImageType";
 
 class LocalStorage {
+  // ... andere Methoden und Eigenschaften ...
+
+  Future<void> storeUserName(String name) async {
+    await GetStorage().write('userName', name);
+  }
+
+  String? retrieveUserName() {
+    return GetStorage().read('userName');
+  }
+
+  Future<void> storeUserAge(String age) async {
+    await GetStorage().write('userAge', age);
+  }
+
+  String? retrieveUserAge() {
+    return GetStorage().read('userAge');
+  }
+
+  Future<void> storeUserGender(String gender) async {
+    await GetStorage().write('userGender', gender);
+  }
+
+  String? retrieveUserGender() {
+    return GetStorage().read('userGender');
+  }
+
+
   static Future<void> saveLanguage({
     required String langSmall,
     required String langCap,
