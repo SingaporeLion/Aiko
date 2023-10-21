@@ -473,6 +473,11 @@ class LocalStorage {
     return GetStorage().read(isFreeUserToken) ?? true;
   }
 
+  static bool isUserDataAvailable() {
+    // Hier können Sie den Code hinzufügen, um zu überprüfen, ob Benutzerdaten verfügbar sind.
+    return false; // Dies ist nur ein Platzhalterwert.
+  }
+
   static String? get() {
     return GetStorage().read(nameKey);
   }

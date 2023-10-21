@@ -1,19 +1,17 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '/helper/local_storage.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '/helper/notification_helper.dart';
 import '/model/chat_model/chat_model.dart';
 import '/model/user_model/user_model.dart';
-import '/services/api_services.dart';
 import '/utils/strings.dart';
-
+import '/services/api_services.dart';
 import 'package:get_storage/get_storage.dart';
 
 class ChatController extends GetxController {
@@ -25,39 +23,51 @@ class ChatController extends GetxController {
 
   void loadUserData() async {
     print("loadUserData wird aufgerufen");
-    userName = GetStorage().read('userName');
-    userAge = GetStorage().read('userAge');
-    userGender = GetStorage().read('userGender');
+    userName = GetStorage().read('userName') ?? 'Freund';
+    userAge = GetStorage().read('userAge') ?? 0;
+    userGender = GetStorage().read('userGender') ?? 'unbekannt';
     print("Geladener Benutzername: $userName");
     print("Geladenes Alter: $userAge");
     print("Geladenes Geschlecht: $userGender");
-    print("GetStorage Benutzername: ${GetStorage().read('userName')}");
-    print("GetStorage Alter: ${GetStorage().read('userAge')}");
-    // Entfernen Sie den Aufruf von _introduceUserToAI() aus dieser Methode
   }
 
   void onInit() {
     super.onInit();
 
+    _checkStoredData();  // Überprüfen Sie die gespeicherten Daten und setzen Sie die Begrüßungsnachricht
+
     loadUserData();  // Lädt die Benutzerdaten aus dem Speicher
 
-    // Überprüft, ob die Benutzerdaten die Standardwerte haben
     if (getUserName() != 'Freund' && getUserAge() != 0 && getUserGender() != 'unbekannt') {
       _introduceUserToAI();  // Stellt den Benutzer der KI vor
     }
 
-    getSuggestedCategory();
     NotificationHelper.initInfo();
     speech = stt.SpeechToText();
-    if (LocalStorage.isLoggedIn()) {
-      _getUserData();
-    } else {
-      // Stellen Sie sicher, dass _setGuestUser() nur aufgerufen wird, wenn der Benutzer nicht eingeloggt ist
-      _setGuestUser();
-    }
+
     count.value = LocalStorage.getTextCount();
     super.onInit();
-    // Entfernen Sie den Aufruf von AdManager.loadUnityIntAd(), da Sie sagten, dass es nicht mehr vorhanden sein soll
+  }
+
+  void _checkStoredData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userName = prefs.getString('userName');
+    String? userGender = prefs.getString('userGender');
+
+    if (userName != null && userGender != null) {
+      String greetingMessage = userGender == 'Mädchen'
+          ? 'Schön Dich wiederzusehen, liebe $userName!'
+          : 'Schön Dich wiederzusehen, lieber $userName!';
+
+      // Fügen Sie die Begrüßungsnachricht zur Chat-Nachrichtenliste hinzu
+      messages.value.add(
+        ChatMessage(
+          text: greetingMessage,
+          chatMessageType: ChatMessageType.bot,
+        ),
+      );
+      update();
+    }
   }
 
   void _setGuestUser() async {
@@ -71,18 +81,13 @@ class ChatController extends GetxController {
 
     userModel = userData;
 
-    // Ändern Sie die Begrüßung basierend auf dem geladenen Benutzernamen
-    String greetingMessage = (userName != null && userName.isNotEmpty)
-        ? 'Hallo liebe/r $userName, schön Dich wiederzusehen. Es ist immer eine Freude, mit Dir zu plaudern!'
-        : 'Hallo liebe/r Gast, schön Dich zu sehen!';
-
     messages.value.add(
       ChatMessage(
-        text: greetingMessage,
+        text: Strings.helloGuest.tr,
         chatMessageType: ChatMessageType.bot,
       ),
     );
-    shareMessages.add("$greetingMessage -By ${Strings.appName}\n\n");
+    shareMessages.add("${Strings.helloGuest.tr} -By ${Strings.appName}\n\n");
 
     Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
     itemCount.value = messages.value.length;
@@ -130,7 +135,6 @@ class ChatController extends GetxController {
   RxBool isLoading = false.obs;
   RxBool isLoading2 = false.obs;
   late UserModel userModel;
-  late List<QueryDocumentSnapshot<Map<String, dynamic>>> suggestedData;
   final List<String> moreList = [
     Strings.regenerateResponse.tr,
     Strings.clearConversation.tr,
@@ -341,39 +345,6 @@ class ChatController extends GetxController {
     update();
   }
 
-  void _getUserData() async {
-    final FirebaseAuth userAuth = FirebaseAuth.instance; // firebase instance/object
-
-    // Get the user form the firebase
-    User? user = userAuth.currentUser;
-
-    UserModel userData = UserModel(
-        name: user!.displayName ?? "",
-        uniqueId: user.uid,
-        email: user.email ?? '',
-        phoneNumber: user.phoneNumber ?? "",
-        isActive: true,
-        imageUrl: user.photoURL ?? "");
-
-    userModel = userData;
-
-    // Ändern Sie die Begrüßung basierend auf dem lokal gespeicherten Benutzernamen
-    String greetingMessage = (userName != null && userName.isNotEmpty)
-        ? 'Hallo liebe/r $userName, schön Dich wiederzusehen. Es ist immer eine Freude, mit Dir zu plaudern!'
-        : 'Hallo liebe/r Gast, schön Dich zu sehen!';
-
-    messages.value.add(
-      ChatMessage(
-        text: greetingMessage,
-        chatMessageType: ChatMessageType.bot,
-      ),
-    );
-    shareMessages.add("$greetingMessage -By ${Strings.appName}\n\n");
-
-    Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
-    itemCount.value = messages.value.length;
-    update();
-  }
 
   void shareChat(BuildContext context) {
     debugPrint(shareMessages.toString());
@@ -381,23 +352,6 @@ class ChatController extends GetxController {
         subject: "I'm sharing Conversation with ${Strings.appName}");
   }
 
-  final FirebaseAuth _auth = FirebaseAuth.instance; // firebase instance/object
-  User get user => _auth.currentUser!;
   RxInt count = 0.obs;
-
-  getSuggestedCategory() async {
-    isLoading2.value = true;
-    update();
-
-    final QuerySnapshot<Map<String, dynamic>> userDoc =
-    await FirebaseFirestore.instance.collection('suggested_category').get();
-
-    suggestedData = userDoc.docs;
-
-    debugPrint(userDoc.docs.toString());
-    debugPrint(userDoc.docs.length.toString());
-
-    isLoading2.value = false;
-    update();
   }
-}
+
