@@ -24,6 +24,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void _checkStoredData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userName = prefs.getString('userName');
+    int? userAge = prefs.getInt('userAge');  // Ändern Sie diese Zeile
     String? userGender = prefs.getString('userGender');
 
     if (userName != null && userGender != null) {
@@ -165,7 +166,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     onPressed: () async {
                       SharedPreferences prefs = await SharedPreferences.getInstance();
                       await prefs.setString('userName', _nameController.text);
-                      await prefs.setString('userAge', _ageController.text);
+                      int? age = int.tryParse(_ageController.text);
+                      if (age != null) {
+                        await prefs.setInt('userAge', age);
+                      }
                       await prefs.setString('userGender', _selectedGender ?? '');
                       Navigator.pushReplacementNamed(context, Routes.homeScreen);
                     },
