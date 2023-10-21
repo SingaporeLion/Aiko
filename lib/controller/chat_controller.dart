@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math'; // Für die Zufallsgenerierung
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/helper/local_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,13 +9,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:lottie/lottie.dart';
 import '/helper/notification_helper.dart';
-import '/helper/unity_ad.dart';
 import '/model/chat_model/chat_model.dart';
 import '/model/user_model/user_model.dart';
 import '/services/api_services.dart';
 import '/utils/strings.dart';
-import 'main_controller.dart';
-import '/widgets/api/custom_loading_api.dart';
+
 import 'package:get_storage/get_storage.dart';
 
 class ChatController extends GetxController {
@@ -26,20 +23,19 @@ class ChatController extends GetxController {
   int userAge = 0;
   String userGender = '';
 
-  Future<void> loadUserData() async {
+  void loadUserData() async {
     print("loadUserData wird aufgerufen");
     userName = GetStorage().read('userName');
     userAge = GetStorage().read('userAge');
     userGender = GetStorage().read('userGender');
     print("Geladener Benutzername: $userName");
     print("Geladenes Alter: $userAge");
-    print("Geladenes Alter: $userGender");
+    print("Geladenes Geschlecht: $userGender");
     print("GetStorage Benutzername: ${GetStorage().read('userName')}");
     print("GetStorage Alter: ${GetStorage().read('userAge')}");
-    _introduceUserToAI();
+    // Entfernen Sie den Aufruf von _introduceUserToAI() aus dieser Methode
   }
 
-  @override
   void onInit() {
     super.onInit();
 
@@ -53,12 +49,44 @@ class ChatController extends GetxController {
     getSuggestedCategory();
     NotificationHelper.initInfo();
     speech = stt.SpeechToText();
-    LocalStorage.isLoggedIn() ? _getUserData() : _setGesutUser();
+    if (LocalStorage.isLoggedIn()) {
+      _getUserData();
+    } else {
+      // Stellen Sie sicher, dass _setGuestUser() nur aufgerufen wird, wenn der Benutzer nicht eingeloggt ist
+      _setGuestUser();
+    }
     count.value = LocalStorage.getTextCount();
     super.onInit();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      await AdManager.loadUnityIntAd();
-    });
+    // Entfernen Sie den Aufruf von AdManager.loadUnityIntAd(), da Sie sagten, dass es nicht mehr vorhanden sein soll
+  }
+
+  void _setGuestUser() async {
+    UserModel userData = UserModel(
+        name: "Guest",
+        uniqueId: '',
+        email: '',
+        phoneNumber: '',
+        isActive: false,
+        imageUrl: '');
+
+    userModel = userData;
+
+    // Ändern Sie die Begrüßung basierend auf dem geladenen Benutzernamen
+    String greetingMessage = (userName != null && userName.isNotEmpty)
+        ? 'Hallo liebe/r $userName, schön Dich wiederzusehen. Es ist immer eine Freude, mit Dir zu plaudern!'
+        : 'Hallo liebe/r Gast, schön Dich zu sehen!';
+
+    messages.value.add(
+      ChatMessage(
+        text: greetingMessage,
+        chatMessageType: ChatMessageType.bot,
+      ),
+    );
+    shareMessages.add("$greetingMessage -By ${Strings.appName}\n\n");
+
+    Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
+    itemCount.value = messages.value.length;
+    update();
   }
 
   void _introduceUserToAI() async {
@@ -88,10 +116,6 @@ class ChatController extends GetxController {
       ],
     );
   }
-
-
-
-  @override
 
   final chatController = TextEditingController();
   final scrollController = ScrollController();
@@ -318,8 +342,7 @@ class ChatController extends GetxController {
   }
 
   void _getUserData() async {
-    final FirebaseAuth userAuth =
-        FirebaseAuth.instance; // firebase instance/object
+    final FirebaseAuth userAuth = FirebaseAuth.instance; // firebase instance/object
 
     // Get the user form the firebase
     User? user = userAuth.currentUser;
@@ -334,43 +357,18 @@ class ChatController extends GetxController {
 
     userModel = userData;
 
-    String greetingMessage = (userData.name != null && userData.name.isNotEmpty)
-        ? 'Hallo ${userData.name}!'
-        : Strings.helloGuest.tr;
+    // Ändern Sie die Begrüßung basierend auf dem lokal gespeicherten Benutzernamen
+    String greetingMessage = (userName != null && userName.isNotEmpty)
+        ? 'Hallo liebe/r $userName, schön Dich wiederzusehen. Es ist immer eine Freude, mit Dir zu plaudern!'
+        : 'Hallo liebe/r Gast, schön Dich zu sehen!';
+
     messages.value.add(
       ChatMessage(
         text: greetingMessage,
         chatMessageType: ChatMessageType.bot,
       ),
     );
-    shareMessages
-        .add("${Strings.hello.tr} ${userData.name} -By ${Strings.appName}\n");
-
-    Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
-    itemCount.value = messages.value.length;
-    update();
-  }
-
-  void _setGesutUser() async {
-    // Get the user form the firebase
-
-    UserModel userData = UserModel(
-        name: "Guest",
-        uniqueId: '',
-        email: '',
-        phoneNumber: '',
-        isActive: false,
-        imageUrl: '');
-
-    userModel = userData;
-
-    messages.value.add(
-      ChatMessage(
-        text: Strings.helloGuest.tr,
-        chatMessageType: ChatMessageType.bot,
-      ),
-    );
-    shareMessages.add("${Strings.helloGuest.tr} -By ${Strings.appName}\n\n");
+    shareMessages.add("$greetingMessage -By ${Strings.appName}\n\n");
 
     Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
     itemCount.value = messages.value.length;
