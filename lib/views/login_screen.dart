@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:AIKO/routes/routes.dart';
-import 'package:AIKO/helper/local_storage.dart';
 
 class WelcomeScreen extends StatefulWidget {
   @override
@@ -10,10 +10,8 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   late TextEditingController _nameController;
   late TextEditingController _ageController;
-  String _greetingMessageTop = '';
-  String _greetingMessageBottom = '';
   String? _selectedGender;
-  final localStorage = LocalStorage();  // Erstellen Sie eine Instanz von LocalStorage
+  String? _greetingMessage;
 
   @override
   void initState() {
@@ -23,36 +21,29 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     _checkStoredData();
   }
 
-  void _checkStoredData() {
-    String? userName = LocalStorage.getString('userName');
-    String? userAge = LocalStorage.getString('userAge');
-    String? userGender = LocalStorage.getString('userGender');
-
-    print("Abgerufener Benutzername: $userName");
-    print("Abgerufenes Alter: $userAge");
-    print("Abgerufenes Geschlecht: $userGender");
+  void _checkStoredData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userName = prefs.getString('userName');
+    String? userGender = prefs.getString('userGender');
 
     if (userName != null && userGender != null) {
       setState(() {
-        _greetingMessageTop = 'Schön Dich wiederzusehen,';
-        _greetingMessageBottom = userGender == 'Mädchen'
-            ? 'liebe $userName!'
-            : 'lieber $userName!';
+        _greetingMessage = userGender == 'Mädchen'
+            ? 'Schön Dich wiederzusehen, liebe $userName!'
+            : 'Schön Dich wiederzusehen, lieber $userName!';
       });
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-    print("LoginScreen wird gebaut");
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.purple[800]!, Colors.purple[700]!, Colors.blue[600]!, Colors.blue[300]!],
+            colors: [Colors.pink[100]!, Colors.blue[100]!],
           ),
         ),
         child: Center(
@@ -62,7 +53,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               children: [
                 Image.asset('assets/logo/bot.png', height: 350, width: 250,),
                 Text(
-                  'Hallo großer Entdecker 🌟',
+                  'Hallo großer Entdecker! 🌟',
                   style: TextStyle(
                     fontFamily: 'Pacifico',
                     fontSize: 24,
@@ -70,25 +61,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                 ),
                 SizedBox(height: 20),
-                if (_greetingMessageTop != null && _greetingMessageBottom != null) ...[
-                  Text(
-                    _greetingMessageTop,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'Pacifico',
-                      fontSize: 24,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    _greetingMessageBottom,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'Pacifico',
-                      fontSize: 24,
-                      color: Colors.white,
-                    ),
-                  ),
+                if (_greetingMessage != null) ...[
+                  Text(_greetingMessage!, style: TextStyle(
+                    fontFamily: 'Pacifico',
+                    fontSize: 24,
+                    color: Colors.white,
+                  )),
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
@@ -185,17 +163,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () async {
-                      print("Button wurde gedrückt!");
-
-                      // Daten speichern mit LocalStorage
-                      await LocalStorage.setString('userName', _nameController.text);
-                      await LocalStorage.setString('userAge', _ageController.text);
-                      await LocalStorage.setString('userGender', _selectedGender ?? '');
-
-                      print("Gespeicherter Benutzername: ${_nameController.text}");
-                      print("Gespeichertes Alter: ${_ageController.text}");
-                      print("Gespeichertes Geschlecht: ${_selectedGender ?? ''}");
-
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      await prefs.setString('userName', _nameController.text);
+                      await prefs.setString('userAge', _ageController.text);
+                      await prefs.setString('userGender', _selectedGender ?? '');
                       Navigator.pushReplacementNamed(context, Routes.homeScreen);
                     },
                     child: Text('Los geht\'s! 🚀', style: TextStyle(fontFamily: 'Pacifico')),
@@ -203,10 +174,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15.0),
                       ),
-                      minimumSize: Size(200, 60), // Hier können Sie die Größe anpassen
                     ),
-                  )
-
+                  ),
                 ],
               ],
             ),

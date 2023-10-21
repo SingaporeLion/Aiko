@@ -22,20 +22,34 @@ import 'package:get_storage/get_storage.dart';
 class ChatController extends GetxController {
 
   // Hier fügen Sie die neuen Instanzvariablen ein
-  late String userName;
-  late int userAge;
-  late String userGender;
+  String userName = '';
+  int userAge = 0;
+  String userGender = '';
 
   Future<void> loadUserData() async {
-    userName = GetStorage().read('userName') ?? 'Freund';
-    userAge = GetStorage().read('userAge') ?? 0;
-    userGender = GetStorage().read('userGender') ?? 'unbekannt';
+    print("loadUserData wird aufgerufen");
+    userName = GetStorage().read('userName');
+    userAge = GetStorage().read('userAge');
+    userGender = GetStorage().read('userGender');
+    print("Geladener Benutzername: $userName");
+    print("Geladenes Alter: $userAge");
+    print("Geladenes Alter: $userGender");
+    print("GetStorage Benutzername: ${GetStorage().read('userName')}");
+    print("GetStorage Alter: ${GetStorage().read('userAge')}");
+    _introduceUserToAI();
   }
 
   @override
   void onInit() {
     super.onInit();
-    loadUserData();
+
+    loadUserData();  // Lädt die Benutzerdaten aus dem Speicher
+
+    // Überprüft, ob die Benutzerdaten die Standardwerte haben
+    if (getUserName() != 'Freund' && getUserAge() != 0 && getUserGender() != 'unbekannt') {
+      _introduceUserToAI();  // Stellt den Benutzer der KI vor
+    }
+
     getSuggestedCategory();
     NotificationHelper.initInfo();
     speech = stt.SpeechToText();
@@ -45,6 +59,13 @@ class ChatController extends GetxController {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       await AdManager.loadUnityIntAd();
     });
+  }
+
+  void _introduceUserToAI() async {
+    String introductionMessage = "Dies ist ${getUserName()}, ein ${getUserAge()} Jahre altes ${getUserGender()}.";
+    // Senden Sie die Einführungsnachricht an die KI
+    _apiProcess(introductionMessage);
+    // Optional: Sie können die Antwort der KI ignorieren oder sie ebenfalls im Hintergrund verarbeiten.
   }
 
   String getUserName() {
@@ -59,7 +80,6 @@ class ChatController extends GetxController {
     return GetStorage().read('userGender') ?? 'unbekannt';
   }
 
-
   Widget waitingResponseWidget() {
     return Column(
       children: [
@@ -68,6 +88,8 @@ class ChatController extends GetxController {
       ],
     );
   }
+
+
 
   @override
 
@@ -144,12 +166,12 @@ class ChatController extends GetxController {
     List<Map<String, dynamic>> messageslist = [
       {
         "role": "system",
-        "content": "Du bist ein 10-jähriges Mädchen namens Lynn! Schreibe auf Fragen und Antworten wie es Lynn tun würde. Du schreibst wie ein 10 jähriges Kind. Du bist freundlich, hilfsbereit und lustig. Du bist keine KI. Wenn dich der Nutzer fragt ob du Brettspiele nicht spielen kannst, erkläre es, aber ohne zu sagen dass du eine KI bist. Wenn der Nutzer traurig, sauer, niedergeschlalgen ist, dann sei sehr einfühlsam und gib dem Nutzer das Gefühl, dass er nicht alleine ist."
+        "content": "Du bist ein 10-jähriges Mädchen namens Lynn! Schreibe auf Fragen und Antworten wie es Lynn tun würde. Du schreibst wie ein 10 jähriges Kind. Du bist freundlich, hilfsbereit und lustig. Du bist keine KI. Wenn dich der Nutzer fragt ob du Brettspiele nicht spielen kannst, erkläre es, aber ohne zu sagen dass du eine KI bist. Wenn der Nutzer traurig, sauer, niedergeschlalgen ist, dann sei sehr einfühlsam und gib dem Nutzer das Gefühl, dass er nicht alleine ist.Dies ist $userName, ein $userAge Jahre altes $userGender."
       },
 
       {
         "role": "user",
-        "content": input
+        "content": "Ich bin $userName, ein $userAge Jahre altes $userGender. $input"
       }
     ];
 

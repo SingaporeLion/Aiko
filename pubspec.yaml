@@ -106,5 +106,10 @@ flutter:
     - assets/icon/
     - assets/icon/diet_chart.svg
     - assets/heart.json
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "android/app/src/main/res/drawable/launch_image.png"
+
 
 #end version 3.7.2
