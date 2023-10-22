@@ -18,6 +18,7 @@ import 'package:geocoding/geocoding.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:math';
+import 'package:geolocator/geolocator.dart';
 
 class ChatController extends GetxController {
 
@@ -25,6 +26,82 @@ class ChatController extends GetxController {
   String userName = '';
   int userAge = 0;
   String userGender = '';
+// Erstellen Sie einen StreamController für die Chat-Nachrichtenliste
+  final StreamController<List<ChatMessage>> _chatMessagesStreamController = StreamController<List<ChatMessage>>.broadcast();
+
+  // Getter-Methode für den Stream
+  Stream<List<ChatMessage>> get chatMessagesStream => _chatMessagesStreamController.stream;
+
+
+  Future<Position> _getUserLocation() async {
+    return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+  }
+
+  Future<String?> _getUserCity() async {
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+    if (placemarks != null && placemarks.isNotEmpty) {
+      return placemarks[0].locality; // 'locality' gibt die Stadt oder Ortschaft zurück
+    }
+    return null;
+  }
+
+  Future<String> sendToAI(String message, String latitude, String longitude) async {
+    // Überprüfen Sie, ob die Nachricht des Benutzers eine Anfrage nach dem Standort ist
+    if (message.toLowerCase().contains("wo bin ich") ||
+        message.toLowerCase().contains("wo lebe ich") ||
+        message.toLowerCase().contains("wo wohne ich") ||
+        message.toLowerCase().contains("woher komme ich") ||
+        message.toLowerCase().contains("wie ist mein standort") ||
+        message.toLowerCase().contains("wo befinde ich mich gerade") ||
+        message.toLowerCase().contains("kannst du mir meinen aktuellen standort sagen") ||
+        message.toLowerCase().contains("in welcher stadt bin ich jetzt") ||
+        message.toLowerCase().contains("wo finde ich mich aktuell") ||
+        message.toLowerCase().contains("kannst du mir sagen, wo ich bin") ||
+        message.toLowerCase().contains("in welchem ort bin ich") ||
+        message.toLowerCase().contains("zeig mir meinen standort") ||
+        message.toLowerCase().contains("welche stadt ist das hier") ||
+        message.toLowerCase().contains("wo genau bin ich jetzt") ||
+        message.toLowerCase().contains("kannst du meinen aktuellen ort bestimmen")) {
+
+      String? city = await _getUserCity();
+      if (city != null) {
+        return "Sie befinden sich in $city.";
+      } else {
+        return "Entschuldigung, ich konnte Ihren Standort nicht bestimmen.";
+      }
+    }
+
+    // Zum Beispiel, wenn Sie einen HTTP-Request verwenden:
+  final response = await http.post(
+    Uri.parse('URL Ihrer KI-API'),
+    body: {
+      'message': message,
+      'latitude': latitude,
+      'longitude': longitude,
+    },
+  );
+  if (response.statusCode == 200) {
+    return response.body; // oder wie auch immer Sie die Antwort extrahieren
+  } else {
+    throw Exception('Failed to send message to AI');
+  }
+    // Wenn Sie keinen HTTP-Request verwenden, ersetzen Sie den obigen Code durch Ihren eigenen Code.
+  }
+
+  void someMethodWhereYouSendUserMessageToAI() async {
+    Position position = await _getUserLocation();
+    String latitude = position.latitude.toString();
+    String longitude = position.longitude.toString();
+    // Senden der Benutzernachricht und des Standorts an die KI
+    String response = await sendToAI("Ihre Anfrage", latitude, longitude);
+    // Hier können Sie den Standort zusammen mit der Benutzernachricht an die KI senden
+    // Zum Beispiel:
+    String userMessage = "Hallo!";  // Dies ist nur ein Platzhalter. Ersetzen Sie ihn durch die tatsächliche Benutzernachricht.
+    String messageWithLocation = "User Message: ${userMessage}\nLocation: Lat: $latitude, Long: $longitude";
+    _addBotResponse(messageWithLocation);
+  }
+
 
   List<String> schimpfwoerter = [
     "doof",
@@ -126,7 +203,7 @@ class ChatController extends GetxController {
 
   final String chatGPTAPIURL = 'https://api.openai.com/v1/chat/completions';
   final String googleSearchAPIURL = 'https://www.googleapis.com/customsearch/v1?key=YOUR_API_KEY&cx=96f7a0294adec4a92&q=YOUR_SEARCH_QUERY';
-  final String googleAPIKey = 'AIzaSyAU3J4y31RKcY7cCkXagS9OoLk1WUiv5yU';
+  final String googleAPIKey = 'AIzaSyDjoN5Ao4KkrBwH9U61mq...';
   final String googleSearchEngineID = '96f7a0294adec4a92';
 
   Future<String> askChatGPT(String userMessage) async {
@@ -137,7 +214,7 @@ class ChatController extends GetxController {
     };
     var headers = {
       "Content-Type": "application/json",
-      "Authorization": "Bearer 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"  // Ersetzen Sie dies durch Ihren tatsächlichen API-Schlüssel
+      "Authorization": "Bearer sk-Z5xB44nPz3r9oZztqipiT..."  // Ersetzen Sie dies durch Ihren tatsächlichen API-Schlüssel
     };
     var response = await http.post(url, body: json.encode(body), headers: headers);
     if (response.statusCode == 200) {
@@ -149,8 +226,8 @@ class ChatController extends GetxController {
   }
 
   Future<List<String>> searchGoogle(String query) async {
-    final String apiKey = 'AIzaSyAU3J4y31RKcY7cCkXagS9OoLk1WUiv5yU';
-    final String searchEngineId = '96f7a0294adec4a92';
+    final String apiKey = 'AIzaSyDjoN5Ao4KkrBwH9U61mqo5vZ8w...';
+    final String searchEngineId = '96f7a0294...';
     final String endpoint = 'https://www.googleapis.com/customsearch/v1?q=$query&key=$apiKey&cx=$searchEngineId';
 
     final response = await http.get(Uri.parse(endpoint));
@@ -1229,6 +1306,10 @@ class ChatController extends GetxController {
         chatMessageType: ChatMessageType.bot,
       ),
     );
+
+    // Senden Sie die aktualisierte Nachrichtenliste an den Stream
+    _chatMessagesStreamController.add(messages.value);
+
     update();  // Aktualisieren Sie den Zustand
 
     shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
