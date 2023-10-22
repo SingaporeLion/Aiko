@@ -12,7 +12,7 @@ import '../utils/custom_color.dart';
 import '../utils/dimensions.dart';
 import '../utils/strings.dart';
 import '../widgets/api/toast_message.dart';
-import '../widgets/app_name_widget.dart';
+//import '../widgets/app_name_widget.dart';
 import 'drawer_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -195,24 +195,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _pageIconAnTitle() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset(
-          Assets.bot,
-          scale: 6,
-        ),
-        _animatedTextWidget(),
-      ],
+    return Center(
+      child: Image.asset(
+        Assets.bot,
+        scale: 6,
+      ),
     );
   }
 
-  _animatedTextWidget() {
-    return const Padding(
-        padding: EdgeInsets.only(top: 18.0), child: AppNameWidget());
-  }
+  //_animatedTextWidget() {
+  //  return const Padding(
+  //      padding: EdgeInsets.only(top: 18.0), child: AppNameWidget());
+  //}
 
   _buildContainer(BuildContext context, isDark,
       {required String title,

@@ -166,13 +166,13 @@ class ChatController extends GetxController {
 
         // Überprüfen Sie die Blacklist
         if (blacklist.any((blacklistedUrl) => link.contains(blacklistedUrl))) {
-          print("Hoppla! Das ist ein Ort, den wir besser nicht besuchen sollten. Lass uns etwas anderes ausprobieren! 😊");
-          return [];
+          print(_getRandomChildFriendlyMessage());
+          return [];  // Rückgabe einer leeren Liste
         }
 
-        // Überprüfen Sie die Whitelist
+// Überprüfen Sie die Whitelist
         if (!whitelist.any((whitelistedUrl) => link.contains(whitelistedUrl))) {
-          print("Hmm, ich kenne diesen Ort nicht so gut. Lass uns bei den Orten bleiben, die wir kennen und lieben! 🌟");
+          print(_getRandomChildFriendlyMessage());
           continue;  // Überspringen Sie diese URL und gehen Sie zur nächsten
         }
 
@@ -1054,7 +1054,7 @@ class ChatController extends GetxController {
     // Fügen Sie eine Nachricht hinzu, um der KI den Standort mitzuteilen
     messages.value.add(
       ChatMessage(
-        text: "Systemnachricht: Der Benutzer befindet sich im Bundesland $state.",
+        //text: "Systemnachricht: Der Benutzer befindet sich im Bundesland $state.",
         chatMessageType: ChatMessageType.bot,  // Verwenden Sie den Bot-Nachrichtentyp
       ),
     );
