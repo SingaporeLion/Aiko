@@ -204,15 +204,15 @@ class _HomeScreenState extends State<HomeScreen> {
           Assets.bot,
           scale: 6,
         ),
-        _animatedTextWidget(),
+      //  _animatedTextWidget(),
       ],
     );
   }
 
-  _animatedTextWidget() {
-    return const Padding(
-        padding: EdgeInsets.only(top: 18.0), child: AppNameWidget());
-  }
+  //_animatedTextWidget() {
+   // return const Padding(
+     //   padding: EdgeInsets.only(top: 18.0), child: AppNameWidget());
+  // }
 
   _buildContainer(BuildContext context, isDark,
       {required String title,

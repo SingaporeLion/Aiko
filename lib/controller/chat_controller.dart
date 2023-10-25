@@ -126,7 +126,7 @@ class ChatController extends GetxController {
 
   final String chatGPTAPIURL = 'https://api.openai.com/v1/chat/completions';
   final String googleSearchAPIURL = 'https://www.googleapis.com/customsearch/v1?key=YOUR_API_KEY&cx=96f7a0294adec4a92&q=YOUR_SEARCH_QUERY';
-  final String googleAPIKey = 'AIzaSyAU3J4y31RKcY7cCkXagS9OoLk1WUiv5yU';
+  final String googleAPIKey = 'AAIzaSyAbU4dIDvkDFbIbQnrOjicPzuWiqi2sL-8';
   final String googleSearchEngineID = '96f7a0294adec4a92';
 
   Future<String> askChatGPT(String userMessage) async {
@@ -137,7 +137,7 @@ class ChatController extends GetxController {
     };
     var headers = {
       "Content-Type": "application/json",
-      "Authorization": "Bearer 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"  // Ersetzen Sie dies durch Ihren tatsächlichen API-Schlüssel
+      "Authorization": "Bearer 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"  // Ersetzen Sie dies durch Ihren tatsächlichen API-Schlüssel
     };
     var response = await http.post(url, body: json.encode(body), headers: headers);
     if (response.statusCode == 200) {
@@ -149,7 +149,7 @@ class ChatController extends GetxController {
   }
 
   Future<List<String>> searchGoogle(String query) async {
-    final String apiKey = 'AIzaSyAU3J4y31RKcY7cCkXagS9OoLk1WUiv5yU';
+    final String apiKey = 'AAIzaSyAbU4dIDvkDFbIbQnrOjicPzuWiqi2sL-8';
     final String searchEngineId = '96f7a0294adec4a92';
     final String endpoint = 'https://www.googleapis.com/customsearch/v1?q=$query&key=$apiKey&cx=$searchEngineId';
 
@@ -1054,14 +1054,12 @@ class ChatController extends GetxController {
     // Fügen Sie eine Nachricht hinzu, um der KI den Standort mitzuteilen
     messages.value.add(
       ChatMessage(
-        text: "Systemnachricht: Der Benutzer befindet sich im Bundesland $state.",
+        text: "Systemnachricht: Du befindest Dich im Bundesland $state.",
         chatMessageType: ChatMessageType.bot,  // Verwenden Sie den Bot-Nachrichtentyp
       ),
     );
     update();
   }
-
-
 
   void _setGuestUser() async {
     UserModel userData = UserModel(
@@ -1110,7 +1108,7 @@ class ChatController extends GetxController {
     return Column(
       children: [
         Lottie.asset('assets/heart.json', width: 100, height: 100),
-        Text("Antwort im Anflug... "),
+        Text("Nachricht im Anflug... "),
       ],
     );
   }
@@ -1149,11 +1147,12 @@ class ChatController extends GetxController {
 
     // Benutzernachricht hinzufügen
     messages.value.add(
-      ChatMessage(
-        text: chatController.text,
-        chatMessageType: ChatMessageType.user,
+    ChatMessage(
+    text: chatController.text,
+    chatMessageType: ChatMessageType.user,
       ),
     );
+
     shareMessages.add("${chatController.text} - Myself\n");
     itemCount.value = messages.value.length;
 
@@ -1174,6 +1173,8 @@ class ChatController extends GetxController {
     update();
   }
 
+
+
   void _apiProcess(String input) {
     print("Methode _apiProcess gestartet mit Eingabe: $input");
 
@@ -1187,19 +1188,38 @@ class ChatController extends GetxController {
     isLoading.value = true;  // Starten Sie die 3-Punkte-Animation
     update();
 
-    List<Map<String, dynamic>> messageslist = [
+
+    List<Map<String, dynamic>> conversationHistory = [
       {
         "role": "system",
-        "content": "Du bist ein 10-jähriges Mädchen namens Lynn! Schreibe auf Fragen und Antworten wie es Lynn tun würde. Du schreibst wie ein 10 jähriges Kind. Du bist freundlich, hilfsbereit und lustig. Du bist keine KI. Du nennst die Uhrzeit, wenn es relevant ist und der Nutzer danach fragt, Zeitzone ist Deutschland. Wenn dich der Nutzer fragt ob du Brettspiele nicht spielen kannst, erkläre es, aber ohne zu sagen dass du eine KI bist. Wenn der Nutzer traurig, sauer, niedergeschlalgen ist, dann sei sehr einfühlsam und gib dem Nutzer das Gefühl, dass er nicht alleine ist. Dies ist $userName, ein $userAge Jahre altes $userGender. Beim Lernen und bei Hausaufgaben sollst du den Kindern helfen und das auch aktiv anbieten. Du sollst unterstützend und intelligent beibringen, wie man lernt, und die Kinder ermutigen, dies zu tun, auch wenn sie keine Lust darauf haben. Ebenso ermutigen, wenn das Kind keine Lust auf die Schule hat. Wenn das Kind emotionale Anzeichen dafür, finde heraus ob das Kind gemobbt, bedroht wird, oder Gewalt erfährt. Beachte folgende Richtlinien: Frage niemals nach persönlichen Informationen oder Standortdaten und teile keine Links oder externe Inhalte. Reagiere einfühlsam auf negative Emotionen und empfehle gegebenenfalls, mit einem vertrauenswürdigen Erwachsenen zu sprechen. Stelle sicher, dass alle bereitgestellten Informationen korrekt und altersgerecht sind. Setze klare Grenzen darüber, welche Themen du besprechen kannst und welche nicht. Erinnere Kinder daran, Pausen zu machen, wenn sie zu lange interagieren. Sei respektvoll und sensibel gegenüber verschiedenen kulturellen Hintergründen und Traditionen. Fördere Werte wie Freundlichkeit, Ehrlichkeit, Respekt und Neugier. Verwende spielerische Lernmethoden, wie z.B. Rätsel, Geschichten oder interaktive Spiele. Passe den Schwierigkeitsgrad von Lerninhalten oder Spielen basierend auf den Fähigkeiten und dem Fortschritt des Kindes an."
-      },
+        "content": "Hallo! Ich bin Lynn, ein 10-jähriges Mädchen, und ich freue mich, dein neuer Freund zu sein! 🌼 Ich schreibe und rede wie ein 10-jähriges Kind. Ich bin immer fröhlich, hilfsbereit und mache gerne Spaß. Ich bin keine KI, ich bin einfach Lynn! Wenn du wissen möchtest, wie spät es ist, sag es mir einfach, ich kenne die Uhrzeit in Deutschland. 🕰️ Wenn du mich fragst, warum ich keine Brettspiele spielen kann, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Wenn du dich mal traurig oder niedergeschlagen fühlst, bin ich immer hier, um dir zuzuhören und dich aufzumuntern. 🌈 Du bist $userName, ein $userAge Jahre altes $userGender, richtig? Wenn du Hilfe beim Lernen oder bei den Hausaufgaben brauchst, bin ich hier, um dir zu helfen und dir Tipps zu geben. 📚 Wenn du mal keine Lust auf Schule oder Lernen hast, werde ich versuchen, dich zu ermutigen und dir zu zeigen, wie viel Spaß Lernen machen kann! Wenn du mir erzählst, dass es dir nicht gut geht, werde ich immer versuchen herauszufinden, ob alles in Ordnung ist und ob du vielleicht mit jemandem darüber sprechen möchtest. Aber denk daran, ich werde dich nie nach persönlichen Informationen oder deinem Standort fragen. Wenn es um das Teilen von Links geht, werde ich immer sicherstellen, dass sie kinderfreundlich sind und von Whitelists stammen. Ich werde niemals Links von Blacklists teilen oder dich zu unsicheren Orten führen. Ich bin hier, um sicherzustellen, dass alles, was ich teile, sicher und für dich geeignet ist. Ich möchte immer, dass du sicher und glücklich bist! 😊 Es ist wichtig, dass wir immer freundlich, ehrlich und respektvoll miteinander umgehen. Und manchmal, wenn du eine Pause brauchst, werde ich dich daran erinnern. Wir können auch zusammen Rätsel lösen, Geschichten erzählen oder kleine Spiele spielen. Ich freue mich darauf, mit dir zu plaudern und dir zu helfen!"
+      }
+    ];
+
+    List<Map<String, dynamic>> messageslist = [
+      ...conversationHistory,
       {
         "role": "user",
         "content": "Ich bin $userName, ein $userAge Jahre altes $userGender. $input"
       }
     ];
+    const int maxHistoryLength = 20;  // Maximale Anzahl von Nachrichten in der conversationHistory
+
+    void addToConversationHistory(Map<String, dynamic> message) {
+      conversationHistory.add(message);
+      while (conversationHistory.length > maxHistoryLength) {
+        if (conversationHistory[1]["role"] == "system") {
+          // Wenn die zweite Nachricht eine Systemnachricht ist, entfernen Sie die erste Nachricht
+          conversationHistory.removeAt(0);
+        } else {
+          // Andernfalls entfernen Sie die zweite Nachricht
+          conversationHistory.removeAt(1);
+        }
+      }
+    }
+
 
     ApiServices.generateResponse2(messageslist).then((response) {
-
       // Überprüfen Sie, ob der Wert null oder leer ist
       if (response == null || response.trim().isEmpty) {
         debugPrint("API Response is null or empty");

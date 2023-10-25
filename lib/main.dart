@@ -10,7 +10,6 @@ import 'package:get_storage/get_storage.dart';
 import 'helper/unity_ad.dart';
 import 'services/apple_sign_in/apple_sign_in_available.dart';
 import 'services/status_service_admin.dart';
-import 'firebase_options.dart';
 import 'helper/notification_helper.dart';
 import 'routes/pages.dart';
 import 'routes/routes.dart';
@@ -26,13 +25,6 @@ void main() async {
   await AdManager.init();
 
   Stripe.publishableKey = ApiConfig.stripePublishableKey;
-
-  // Bedingte Initialisierung von Firebase
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  }
 
   SystemChrome.setPreferredOrientations([
     // Locking Device Orientation

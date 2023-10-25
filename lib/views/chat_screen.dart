@@ -35,7 +35,7 @@ class ChatScreen extends StatelessWidget {
     return Column(
       children: [
         Lottie.asset('assets/heart.json', width: 100, height: 100), // Sie können die Größe nach Bedarf anpassen
-        Text("Antwort im Anflug..."),
+        Text("Nachricht im Anflug..."),
       ],
     );
   }
