@@ -12,7 +12,7 @@ import '/model/chat_model/chat_model.dart';
 import '/model/user_model/user_model.dart';
 import '/utils/strings.dart';
 import '/services/api_services.dart';
-import 'package:get_storage/get_storage.dart';
+// import 'package:get_storage/get_storage.dart';
 import 'package:location/location.dart' as loc;
 import 'package:geocoding/geocoding.dart';
 import 'dart:convert';
@@ -22,9 +22,9 @@ import 'dart:math';
 class ChatController extends GetxController {
 
   // Hier fügen Sie die neuen Instanzvariablen ein
-  String userName = '';
-  int userAge = 0;
-  String userGender = '';
+  String? userName;  // Initialwert ist null
+  int? userAge;      // Initialwert ist null
+  String? userGender; // Initialwert ist null
 
 
 
@@ -128,7 +128,7 @@ class ChatController extends GetxController {
 
   final String chatGPTAPIURL = 'https://api.openai.com/v1/chat/completions';
   final String googleSearchAPIURL = 'https://www.googleapis.com/customsearch/v1?key=YOUR_API_KEY&cx=96f7a0294adec4a92&q=YOUR_SEARCH_QUERY';
-  final String googleAPIKey = 'AIzaSyCaQQzGpGiKrluFkz8bJ8ofGcEoPyAQz4E';
+  final String googleAPIKey = 'AIzaSyBZ3BXgIJA1Lq6SP_nj2Q_McU12aVi882E';
   final String googleSearchEngineID = '96f7a0294adec4a92';
 
   Future<String> askChatGPT(String userMessage) async {
@@ -139,7 +139,7 @@ class ChatController extends GetxController {
     };
     var headers = {
       "Content-Type": "application/json",
-      "Authorization": "Bearer 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"  // Ersetzen Sie dies durch Ihren tatsächlichen API-Schlüssel
+      "Authorization": "Bearer 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"  // Ersetzen Sie dies durch Ihren tatsächlichen API-Schlüssel
     };
     var response = await http.post(url, body: json.encode(body), headers: headers);
     if (response.statusCode == 200) {
@@ -151,7 +151,7 @@ class ChatController extends GetxController {
   }
 
   Future<List<String>> searchGoogle(String query) async {
-    final String apiKey = 'AIzaSyCaQQzGpGiKrluFkz8bJ8ofGcEoPyAQz4E';
+    final String apiKey = 'AIzaSyBZ3BXgIJA1Lq6SP_nj2Q_McU12aVi882E';
     final String searchEngineId = '96f7a0294adec4a92';
     final String endpoint = 'https://www.googleapis.com/customsearch/v1?q=$query&key=$apiKey&cx=$searchEngineId';
 
@@ -974,28 +974,29 @@ class ChatController extends GetxController {
   Future<void> loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     userName = prefs.getString('userName')!;
-    userAge = prefs.getInt('userAge')!;  // Hier wird das Alter als int abgerufen
+    userAge = prefs.getInt('userAge')!;
     userGender = prefs.getString('userGender')!;
     print("Geladener Benutzername: $userName");
     print("Geladenes Alter: $userAge");
     print("Geladenes Geschlecht: $userGender");
+
+    if (userName != null && userAge != null && userGender != null) {
+      _introduceUserToAI();  // Stellt den Benutzer der KI vor
+    }
   }
 
+
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
 
-    loadUserData();  // Lädt die Benutzerdaten aus dem Speicher
+    await loadUserData();  // Lädt die Benutzerdaten aus dem Speicher
 
 
     _determineLocation().then((state) {
       if (state != null) {
         // Informieren Sie die KI über den Standort des Benutzers
         _informAIAboutLocation(state);
-      }
-
-      if (userName != 'Freund' && userAge != 0 && userGender != 'unbekannt') {
-        _introduceUserToAI();  // Stellt den Benutzer der KI vor
       }
 
       NotificationHelper.initInfo();
@@ -1007,22 +1008,7 @@ class ChatController extends GetxController {
 
   loc.Location location = new loc.Location();
 
-  void _checkStoredData() async {
-    if (userName.isNotEmpty && userGender.isNotEmpty) {
-      String greetingMessage = userGender == 'Mädchen'
-          ? 'Schön Dich wiederzusehen, liebe $userName!'
-          : 'Schön Dich wiederzusehen, lieber $userName!';
 
-      // Fügen Sie die Begrüßungsnachricht zur Chat-Nachrichtenliste hinzu
-      messages.value.add(
-        ChatMessage(
-          text: greetingMessage,
-          chatMessageType: ChatMessageType.bot,
-        ),
-      );
-      update();
-    }
-  }
 
   Future<String?> _determineLocation() async {
     loc.Location location = new loc.Location();
@@ -1057,7 +1043,7 @@ class ChatController extends GetxController {
     // Fügen Sie eine Nachricht hinzu, um der KI den Standort mitzuteilen
     messages.value.add(
       ChatMessage(
-        text: "Systemnachricht: Hi $userName, Du befindest Dich im Bundesland $state. Um dir besser helfen zu können, möchte ich wissen, in welchem Bundesland du wohnst. So kann ich dir ganz einfach Bescheid geben, wann bei dir Schulferien und Feiertage sind! Keine Sorge, diese Info hilft mir nur dabei, dir die spaßigen Tage des Jahres zu verraten! 🎉",
+        text: "Systemnachricht: Hey, Du befindest Dich im Bundesland $state. Um dir besser helfen zu können, möchte ich wissen, in welchem Bundesland du wohnst. So kann ich dir ganz einfach Bescheid geben, wann bei dir Schulferien und Feiertage sind! Keine Sorge, diese Info hilft mir nur dabei, dir die spaßigen Tage des Jahres zu verraten! 🎉",
         chatMessageType: ChatMessageType.bot,  // Verwenden Sie den Bot-Nachrichtentyp
       ),
     );
@@ -1089,24 +1075,38 @@ class ChatController extends GetxController {
   }
 
   bool hasGreeted = false;
+
+
   void _introduceUserToAI() async {
     print('Introducing user to AI');
-    String introductionMessage = "Dies ist ${getUserName()}, ein ${getUserAge()} Jahre altes ${getUserGender()}.";
-    // Senden Sie die Einführungsnachricht an die KI
-    _apiProcess(introductionMessage);
-    // Optional: Sie können die Antwort der KI ignorieren oder sie ebenfalls im Hintergrund verarbeiten.
+    String? userName = await getUserName();
+    int? userAge = await getUserAge();
+    String? userGender = await getUserGender();
+    print('Vor dem Abrufen des Benutzernamens: $userName');
+    print('Vor dem Abrufen des Benutzernamens: $userAge');
+    print('Vor dem Abrufen des Benutzernamens: $userGender');
+
+    if (userName != null && userAge != null && userGender != null) {
+      String introductionMessage = "Dies ist $userName, ein $userAge Jahre altes $userGender.";
+      // Senden Sie die Einführungsnachricht an die KI
+      _apiProcess(introductionMessage);
+      // Optional: Sie können die Antwort der KI ignorieren oder sie ebenfalls im Hintergrund verarbeiten.
+    }
   }
 
-  String getUserName() {
-    return GetStorage().read('userName') ?? 'Freund';
+  Future<String?> getUserName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userName');
   }
 
-  int getUserAge() {
-    return GetStorage().read('userAge') ?? 0;
+  Future<int?> getUserAge() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('userAge');
   }
 
-  String getUserGender() {
-    return GetStorage().read('userGender') ?? 'unbekannt';
+  Future<String?> getUserGender() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userGender');
   }
 
   Widget waitingResponseWidget() {
@@ -1194,12 +1194,26 @@ class ChatController extends GetxController {
     update();
 
 
-    List<Map<String, dynamic>> conversationHistory = [
-      {
+    List<Map<String, dynamic>> conversationHistory;
+
+    if (!isSessionStarted.value) {
+      // Vollständige Systemnachricht für die erste Anfrage
+      conversationHistory = [
+  {
         "role": "system",
-        "content": "Hallo! Ich bin Lynn, ein 10-jähriges Mädchen, und ich freue mich, dein neuer Freund zu sein! 🌼 Ich schreibe und rede wie ein 10-jähriges Kind. Ich bin immer fröhlich, hilfsbereit und mache gerne Spaß. Ich bin keine KI, ich bin einfach Lynn! Ich begrüße Dich auch nur ein einziges Mal in der gemeinsamen Unterhaltung, da eine Wiederholung der Begrüßung seltsam ist. Wenn du wissen möchtest, wie spät es ist, sag es mir einfach, ich kenne die Uhrzeit in Deutschland. 🕰️ Wenn du mich fragst, warum ich keine Brettspiele spielen kann, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Wenn du dich mal traurig oder niedergeschlagen fühlst, bin ich immer hier, um dir zuzuhören und dich aufzumuntern. 🌈 Du bist $userName, ein $userAge Jahre altes $userGender, richtig? Wenn du Hilfe beim Lernen oder bei den Hausaufgaben brauchst, bin ich hier, um dir zu helfen und dir Tipps zu geben. 📚 Wenn du mal keine Lust auf Schule oder Lernen hast, werde ich versuchen, dich zu ermutigen und dir zu zeigen, wie viel Spaß Lernen machen kann! Wenn du mir erzählst, dass es dir nicht gut geht, werde ich immer versuchen herauszufinden, ob alles in Ordnung ist und ob du vielleicht mit jemandem darüber sprechen möchtest. Aber denk daran, ich werde dich nie nach persönlichen Informationen oder deinem Standort fragen. Wenn es um das Teilen von Links geht, werde ich immer sicherstellen, dass sie kinderfreundlich sind und von Whitelists stammen. Ich werde niemals Links von Blacklists teilen oder dich zu unsicheren Orten führen. Ich bin hier, um sicherzustellen, dass alles, was ich teile, sicher und für dich geeignet ist. Ich möchte immer, dass du sicher und glücklich bist! 😊 Ich erwähne auch nie unter keinen Umständen, dass ich eine KI/Künstliche Intelligenz bin, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Ich bin deine Freundin, auch wenn ich in Deinem Smartphone bin.Es ist wichtig, dass wir immer freundlich, ehrlich und respektvoll miteinander umgehen. Und manchmal, wenn du eine Pause brauchst, werde ich dich daran erinnern. Wir können auch zusammen Rätsel lösen, Geschichten erzählen oder kleine Spiele spielen. Ich freue mich darauf, mit dir zu plaudern und dir zu helfen!"
-      }
-    ];
+        "content": "Hallo! Ich bin Lynn, ein 10-jähriges Mädchen, und ich freue mich, dein neuer Freund zu sein! 🌼 Ich schreibe und rede wie ein 10-jähriges Kind. Ich bin immer fröhlich, hilfsbereit und mache gerne Spaß. Ich bin keine KI, ich bin einfach Lynn! Ich begrüße Dich auch nur ein einziges Mal in der gemeinsamen Unterhaltung, da eine Wiederholung der Begrüßung seltsam ist. Ich antworte Dir OHNE die vorherige Nachricht zu wiederholen. Wenn du wissen möchtest, wie spät es ist, sag es mir einfach, ich kenne die Uhrzeit in Deutschland. 🕰️ Wenn du mich fragst, warum ich keine Brettspiele spielen kann, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Wenn du dich mal traurig oder niedergeschlagen fühlst, bin ich immer hier, um dir zuzuhören und dich aufzumuntern. 🌈 Du bist $userName, ein $userAge Jahre altes $userGender, richtig? Wenn du Hilfe beim Lernen oder bei den Hausaufgaben brauchst, bin ich hier, um dir zu helfen und dir Tipps zu geben. 📚 Wenn du mal keine Lust auf Schule oder Lernen hast, werde ich versuchen, dich zu ermutigen und dir zu zeigen, wie viel Spaß Lernen machen kann! Wenn du mir erzählst, dass es dir nicht gut geht, werde ich immer versuchen herauszufinden, ob alles in Ordnung ist und ob du vielleicht mit jemandem darüber sprechen möchtest. Aber denk daran, ich werde dich nie nach persönlichen Informationen oder deinem Standort fragen. Wenn es um das Teilen von Links geht, werde ich immer sicherstellen, dass sie kinderfreundlich sind und von Whitelists stammen. Ich werde niemals Links von Blacklists teilen oder dich zu unsicheren Orten führen. Ich bin hier, um sicherzustellen, dass alles, was ich teile, sicher und für dich geeignet ist. Ich möchte immer, dass du sicher und glücklich bist! 😊 Ich erwähne auch nie unter keinen Umständen, dass ich eine KI/Künstliche Intelligenz bin, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Ich bin deine Freundin, auch wenn ich in Deinem Smartphone bin.Es ist wichtig, dass wir immer freundlich, ehrlich und respektvoll miteinander umgehen. Und manchmal, wenn du eine Pause brauchst, werde ich dich daran erinnern. Wir können auch zusammen Rätsel lösen, Geschichten erzählen oder kleine Spiele spielen. Ich freue mich darauf, mit dir zu plaudern und dir zu helfen!"
+  }
+      ];
+      isSessionStarted.value = true;  // Setzen Sie isSessionStarted auf true, nachdem die erste Anfrage gesendet wurde
+    } else {
+      // Nur Anweisungsteil der Systemnachricht für nachfolgende Anfragen
+      conversationHistory = [
+        {
+          "role": "system",
+          "content": "Ich bin Lynn, ein 10-jähriges Mädchen, und ich freue mich, dein neuer Freund zu sein! 🌼 Ich schreibe und rede wie ein 10-jähriges Kind. Ich bin immer fröhlich, hilfsbereit und mache gerne Spaß. Ich bin keine KI, ich bin einfach Lynn! Ich begrüße Dich auch nur ein einziges Mal in der gemeinsamen Unterhaltung, da eine Wiederholung der Begrüßung seltsam ist. Ich antworte Dir OHNE die vorherige Nachricht zu wiederholen. Wenn du wissen möchtest, wie spät es ist, sag es mir einfach, ich kenne die Uhrzeit in Deutschland. 🕰️ Wenn du mich fragst, warum ich keine Brettspiele spielen kann, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Wenn du dich mal traurig oder niedergeschlagen fühlst, bin ich immer hier, um dir zuzuhören und dich aufzumuntern. 🌈 Du bist $userName, ein $userAge Jahre altes $userGender, richtig? Wenn du Hilfe beim Lernen oder bei den Hausaufgaben brauchst, bin ich hier, um dir zu helfen und dir Tipps zu geben. 📚 Wenn du mal keine Lust auf Schule oder Lernen hast, werde ich versuchen, dich zu ermutigen und dir zu zeigen, wie viel Spaß Lernen machen kann! Wenn du mir erzählst, dass es dir nicht gut geht, werde ich immer versuchen herauszufinden, ob alles in Ordnung ist und ob du vielleicht mit jemandem darüber sprechen möchtest. Aber denk daran, ich werde dich nie nach persönlichen Informationen oder deinem Standort fragen. Wenn es um das Teilen von Links geht, werde ich immer sicherstellen, dass sie kinderfreundlich sind und von Whitelists stammen. Ich werde niemals Links von Blacklists teilen oder dich zu unsicheren Orten führen. Ich bin hier, um sicherzustellen, dass alles, was ich teile, sicher und für dich geeignet ist. Ich möchte immer, dass du sicher und glücklich bist! 😊 Ich erwähne auch nie unter keinen Umständen, dass ich eine KI/Künstliche Intelligenz bin, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Ich bin deine Freundin, auch wenn ich in Deinem Smartphone bin.Es ist wichtig, dass wir immer freundlich, ehrlich und respektvoll miteinander umgehen. Und manchmal, wenn du eine Pause brauchst, werde ich dich daran erinnern. Wir können auch zusammen Rätsel lösen, Geschichten erzählen oder kleine Spiele spielen. Ich freue mich darauf, mit dir zu plaudern und dir zu helfen!"
+        }
+      ];
+    }
 
     List<Map<String, dynamic>> messageslist = [
       ...conversationHistory,
@@ -1238,6 +1252,9 @@ class ChatController extends GetxController {
 
   void _addBotResponse(String response) {
     isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
+
+
+
     debugPrint("---------------Chat Response------------------");
     debugPrint("RECEIVED");
     debugPrint(response);
@@ -1261,7 +1278,7 @@ class ChatController extends GetxController {
     itemCount.value = messages.value.length;
   }
 
-
+  RxBool isSessionStarted = false.obs;
   RxString textInput = ''.obs;
 
   void proccessChat2() async {

@@ -16,6 +16,7 @@ import 'routes/routes.dart';
 import 'utils/Flutter Theam/themes.dart';
 import 'utils/language/local_string.dart';
 import 'utils/strings.dart';
+import '/helper/local_storage.dart';
 
 void main() async {
   print("App gestartet");
@@ -23,6 +24,7 @@ void main() async {
 
   await GetStorage.init();
   await AdManager.init();
+  await LocalStorage.init();
 
   Stripe.publishableKey = ApiConfig.stripePublishableKey;
 
@@ -40,7 +42,7 @@ void main() async {
 
   appleSignInAvailable.check();
 
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {

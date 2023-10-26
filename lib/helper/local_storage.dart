@@ -63,6 +63,7 @@ const String selectedToken = "selectedToken";
 const String selectedModel = "selectedModel";
 const String selectedImageType = "selectedImageType";
 
+
 class LocalStorage {
   static SharedPreferences? _preferences;
 
@@ -541,6 +542,8 @@ class LocalStorage {
   static String getSelectedImageType() {
     return GetStorage().read(selectedImageType) ?? '256x256';
   }
+
+
 
   static Future<void> saveSelectedImageType({required String value}) async {
     final box = GetStorage();
