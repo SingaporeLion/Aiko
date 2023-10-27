@@ -63,7 +63,6 @@ const String selectedToken = "selectedToken";
 const String selectedModel = "selectedModel";
 const String selectedImageType = "selectedImageType";
 
-
 class LocalStorage {
   static SharedPreferences? _preferences;
 

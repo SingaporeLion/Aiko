@@ -6,6 +6,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
 
 import 'helper/unity_ad.dart';
 import 'services/apple_sign_in/apple_sign_in_available.dart';
@@ -21,6 +24,10 @@ import '/helper/local_storage.dart';
 void main() async {
   print("App gestartet");
   WidgetsFlutterBinding.ensureInitialized();
+
+    final appDocumentDirectory = await path_provider.getApplicationDocumentsDirectory();
+    Hive.init(appDocumentDirectory.path);
+    runApp(MyApp());
 
   await GetStorage.init();
   await AdManager.init();

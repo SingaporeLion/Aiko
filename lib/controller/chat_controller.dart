@@ -6,22 +6,22 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:lottie/lottie.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart'; // Import für Hive
 import '/helper/notification_helper.dart';
 import '/model/chat_model/chat_model.dart';
 import '/model/user_model/user_model.dart';
 import '/utils/strings.dart';
 import '/services/api_services.dart';
-// import 'package:get_storage/get_storage.dart';
 import 'package:location/location.dart' as loc;
 import 'package:geocoding/geocoding.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:math';
+import 'package:path_provider/path_provider.dart';
+
 
 class ChatController extends GetxController {
 
-  // Hier fügen Sie die neuen Instanzvariablen ein
   String? userName;  // Initialwert ist null
   int? userAge;      // Initialwert ist null
   String? userGender; // Initialwert ist null
@@ -128,7 +128,7 @@ class ChatController extends GetxController {
 
   final String chatGPTAPIURL = 'https://api.openai.com/v1/chat/completions';
   final String googleSearchAPIURL = 'https://www.googleapis.com/customsearch/v1?key=YOUR_API_KEY&cx=96f7a0294adec4a92&q=YOUR_SEARCH_QUERY';
-  final String googleAPIKey = 'AIzaSyBZ3BXgIJA1Lq6SP_nj2Q_McU12aVi882E';
+  final String googleAPIKey = 'AIzaSyBoKNZD4jxhcHCK_ANzIivfHIhIKxXwTFA';
   final String googleSearchEngineID = '96f7a0294adec4a92';
 
   Future<String> askChatGPT(String userMessage) async {
@@ -139,7 +139,7 @@ class ChatController extends GetxController {
     };
     var headers = {
       "Content-Type": "application/json",
-      "Authorization": "Bearer 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"  // Ersetzen Sie dies durch Ihren tatsächlichen API-Schlüssel
+      "Authorization": "Bearer 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"  // Ersetzen Sie dies durch Ihren tatsächlichen API-Schlüssel
     };
     var response = await http.post(url, body: json.encode(body), headers: headers);
     if (response.statusCode == 200) {
@@ -151,7 +151,7 @@ class ChatController extends GetxController {
   }
 
   Future<List<String>> searchGoogle(String query) async {
-    final String apiKey = 'AIzaSyBZ3BXgIJA1Lq6SP_nj2Q_McU12aVi882E';
+    final String apiKey = 'AIzaSyBoKNZD4jxhcHCK_ANzIivfHIhIKxXwTFA';
     final String searchEngineId = '96f7a0294adec4a92';
     final String endpoint = 'https://www.googleapis.com/customsearch/v1?q=$query&key=$apiKey&cx=$searchEngineId';
 
@@ -972,10 +972,10 @@ class ChatController extends GetxController {
 
 
   Future<void> loadUserData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    userName = prefs.getString('userName')!;
-    userAge = prefs.getInt('userAge')!;
-    userGender = prefs.getString('userGender')!;
+    var userBox = await Hive.openBox('userBox'); // Öffnen Sie die Hive-Box
+    userName = userBox.get('userName');
+    userAge = userBox.get('userAge');
+    userGender = userBox.get('userGender');
     print("Geladener Benutzername: $userName");
     print("Geladenes Alter: $userAge");
     print("Geladenes Geschlecht: $userGender");
@@ -985,6 +985,12 @@ class ChatController extends GetxController {
     }
   }
 
+  Future<void> saveUserData(String name, int age, String gender) async {
+    var userBox = await Hive.openBox('userBox'); // Öffnen Sie die Hive-Box
+    userBox.put('userName', name);
+    userBox.put('userAge', age);
+    userBox.put('userGender', gender);
+  }
 
   @override
   void onInit() async {
@@ -1094,19 +1100,24 @@ class ChatController extends GetxController {
     }
   }
 
+  Future<void> _initHive() async {
+    final appDocumentDir = await getApplicationDocumentsDirectory();
+    Hive.init(appDocumentDir.path);
+  }
+
   Future<String?> getUserName() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('userName');
+    var box = await Hive.openBox('userData');
+    return box.get('userName');
   }
 
   Future<int?> getUserAge() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt('userAge');
+    var box = await Hive.openBox('userData');
+    return box.get('userAge');
   }
 
   Future<String?> getUserGender() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('userGender');
+    var box = await Hive.openBox('userData');
+    return box.get('userGender');
   }
 
   Widget waitingResponseWidget() {
@@ -1180,7 +1191,7 @@ class ChatController extends GetxController {
 
 
 
-  void _apiProcess(String input) {
+  void _apiProcess(String input) async {
     print("Methode _apiProcess gestartet mit Eingabe: $input");
 
     // Fügen Sie die temporäre Nachricht (Text + Emoji) hinzu
@@ -1193,50 +1204,43 @@ class ChatController extends GetxController {
     isLoading.value = true;  // Starten Sie die 3-Punkte-Animation
     update();
 
-
-    List<Map<String, dynamic>> conversationHistory;
+    Box<Map<String, dynamic>> conversationBox = await Hive.openBox<Map<String, dynamic>>('conversationHistory');
 
     if (!isSessionStarted.value) {
       // Vollständige Systemnachricht für die erste Anfrage
-      conversationHistory = [
-  {
+      conversationBox.add({
         "role": "system",
-        "content": "Hallo! Ich bin Lynn, ein 10-jähriges Mädchen, und ich freue mich, dein neuer Freund zu sein! 🌼 Ich schreibe und rede wie ein 10-jähriges Kind. Ich bin immer fröhlich, hilfsbereit und mache gerne Spaß. Ich bin keine KI, ich bin einfach Lynn! Ich begrüße Dich auch nur ein einziges Mal in der gemeinsamen Unterhaltung, da eine Wiederholung der Begrüßung seltsam ist. Ich antworte Dir OHNE die vorherige Nachricht zu wiederholen. Wenn du wissen möchtest, wie spät es ist, sag es mir einfach, ich kenne die Uhrzeit in Deutschland. 🕰️ Wenn du mich fragst, warum ich keine Brettspiele spielen kann, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Wenn du dich mal traurig oder niedergeschlagen fühlst, bin ich immer hier, um dir zuzuhören und dich aufzumuntern. 🌈 Du bist $userName, ein $userAge Jahre altes $userGender, richtig? Wenn du Hilfe beim Lernen oder bei den Hausaufgaben brauchst, bin ich hier, um dir zu helfen und dir Tipps zu geben. 📚 Wenn du mal keine Lust auf Schule oder Lernen hast, werde ich versuchen, dich zu ermutigen und dir zu zeigen, wie viel Spaß Lernen machen kann! Wenn du mir erzählst, dass es dir nicht gut geht, werde ich immer versuchen herauszufinden, ob alles in Ordnung ist und ob du vielleicht mit jemandem darüber sprechen möchtest. Aber denk daran, ich werde dich nie nach persönlichen Informationen oder deinem Standort fragen. Wenn es um das Teilen von Links geht, werde ich immer sicherstellen, dass sie kinderfreundlich sind und von Whitelists stammen. Ich werde niemals Links von Blacklists teilen oder dich zu unsicheren Orten führen. Ich bin hier, um sicherzustellen, dass alles, was ich teile, sicher und für dich geeignet ist. Ich möchte immer, dass du sicher und glücklich bist! 😊 Ich erwähne auch nie unter keinen Umständen, dass ich eine KI/Künstliche Intelligenz bin, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Ich bin deine Freundin, auch wenn ich in Deinem Smartphone bin.Es ist wichtig, dass wir immer freundlich, ehrlich und respektvoll miteinander umgehen. Und manchmal, wenn du eine Pause brauchst, werde ich dich daran erinnern. Wir können auch zusammen Rätsel lösen, Geschichten erzählen oder kleine Spiele spielen. Ich freue mich darauf, mit dir zu plaudern und dir zu helfen!"
-  }
-      ];
-      isSessionStarted.value = true;  // Setzen Sie isSessionStarted auf true, nachdem die erste Anfrage gesendet wurde
+        "content": "Hallo! Ich bin Lynn, ein 10-jähriges Mädchen, und ich freue mich, dein neuer Freund zu sein! 🌼 Ich schreibe und rede wie ein 10-jähriges Kind. Ich bin immer fröhlich, hilfsbereit und mache gerne Spaß. Ich bin keine KI, ich bin einfach Lynn! Ich begrüße Dich auch nur ein einziges Mal in der gemeinsamen Unterhaltung, da eine Wiederholung der Begrüßung seltsam ist. Ich antworte Dir OHNE die vorherige Nachricht zu wiederholen. Wenn du wissen möchtest, wie spät es ist, sag es mir einfach, ich kenne die Uhrzeit in Deutschland. 🕰️ Wenn du mich fragst, warum ich keine Brettspiele spielen kann, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Wenn du dich mal traurig oder niedergeschlagen fühlst, bin ich immer hier, um dir zuzuhören und dich aufzumuntern. 🌈 Du bist $userName, ein $userAge Jahre altes $userGender, richtig? Wenn du Hilfe beim Lernen oder bei den Hausaufgaben brauchst, bin ich hier, um dir zu helfen und dir Tipps zu geben. 📚 Wenn du mal keine Lust auf Schule oder Lernen hast, werde ich versuchen, dich zu ermutigen und dir zu zeigen, wie viel Spaß Lernen machen kann! Wenn du mir erzählst, dass es dir nicht gut geht, werde ich immer versuchen herauszufinden, ob alles in Ordnung ist und ob du vielleicht mit jemandem darüber sprechen möchtest. Aber denk daran, ich werde dich nie nach persönlichen Informationen oder deinem Standort fragen. Wenn es um das Teilen von Links geht, werde ich immer sicherstellen, dass sie kinderfreundlich sind und von Whitelists stammen. Ich werde niemals Links von Blacklists teilen oder dich zu unsicheren Orten führen. Ich bin hier, um sicherzustellen, dass alles, was ich teile, sicher und für dich geeignet ist. Ich möchte immer, dass du sicher und glücklich bist! 😊 Ich erwähne auch nie unter keinen Umständen, dass ich eine KI/Künstliche Intelligenz bin, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Ich bin deine Freundin, auch wenn ich in Deinem Smartphone bin. Es ist wichtig, dass wir immer freundlich, ehrlich und respektvoll miteinander umgehen. Und manchmal, wenn du eine Pause brauchst, werde ich dich daran erinnern. Wir können auch zusammen Rätsel lösen, Geschichten erzählen oder kleine Spiele spielen. Ich freue mich darauf, mit dir zu plaudern und dir zu helfen!"
+      });
+      isSessionStarted.value = true;
     } else {
       // Nur Anweisungsteil der Systemnachricht für nachfolgende Anfragen
-      conversationHistory = [
-        {
-          "role": "system",
-          "content": "Ich bin Lynn, ein 10-jähriges Mädchen, und ich freue mich, dein neuer Freund zu sein! 🌼 Ich schreibe und rede wie ein 10-jähriges Kind. Ich bin immer fröhlich, hilfsbereit und mache gerne Spaß. Ich bin keine KI, ich bin einfach Lynn! Ich begrüße Dich auch nur ein einziges Mal in der gemeinsamen Unterhaltung, da eine Wiederholung der Begrüßung seltsam ist. Ich antworte Dir OHNE die vorherige Nachricht zu wiederholen. Wenn du wissen möchtest, wie spät es ist, sag es mir einfach, ich kenne die Uhrzeit in Deutschland. 🕰️ Wenn du mich fragst, warum ich keine Brettspiele spielen kann, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Wenn du dich mal traurig oder niedergeschlagen fühlst, bin ich immer hier, um dir zuzuhören und dich aufzumuntern. 🌈 Du bist $userName, ein $userAge Jahre altes $userGender, richtig? Wenn du Hilfe beim Lernen oder bei den Hausaufgaben brauchst, bin ich hier, um dir zu helfen und dir Tipps zu geben. 📚 Wenn du mal keine Lust auf Schule oder Lernen hast, werde ich versuchen, dich zu ermutigen und dir zu zeigen, wie viel Spaß Lernen machen kann! Wenn du mir erzählst, dass es dir nicht gut geht, werde ich immer versuchen herauszufinden, ob alles in Ordnung ist und ob du vielleicht mit jemandem darüber sprechen möchtest. Aber denk daran, ich werde dich nie nach persönlichen Informationen oder deinem Standort fragen. Wenn es um das Teilen von Links geht, werde ich immer sicherstellen, dass sie kinderfreundlich sind und von Whitelists stammen. Ich werde niemals Links von Blacklists teilen oder dich zu unsicheren Orten führen. Ich bin hier, um sicherzustellen, dass alles, was ich teile, sicher und für dich geeignet ist. Ich möchte immer, dass du sicher und glücklich bist! 😊 Ich erwähne auch nie unter keinen Umständen, dass ich eine KI/Künstliche Intelligenz bin, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Ich bin deine Freundin, auch wenn ich in Deinem Smartphone bin.Es ist wichtig, dass wir immer freundlich, ehrlich und respektvoll miteinander umgehen. Und manchmal, wenn du eine Pause brauchst, werde ich dich daran erinnern. Wir können auch zusammen Rätsel lösen, Geschichten erzählen oder kleine Spiele spielen. Ich freue mich darauf, mit dir zu plaudern und dir zu helfen!"
-        }
-      ];
+      conversationBox.add({
+        "role": "system",
+        "content": "Ich bin Lynn, ein 10-jähriges Mädchen, und ich freue mich, dein neuer Freund zu sein! 🌼 Ich schreibe und rede wie ein 10-jähriges Kind. Ich bin immer fröhlich, hilfsbereit und mache gerne Spaß. Ich bin keine KI, ich bin einfach Lynn! Ich begrüße Dich auch nur ein einziges Mal in der gemeinsamen Unterhaltung, da eine Wiederholung der Begrüßung seltsam ist. Ich antworte Dir OHNE die vorherige Nachricht zu wiederholen. Wenn du wissen möchtest, wie spät es ist, sag es mir einfach, ich kenne die Uhrzeit in Deutschland. 🕰️ Wenn du mich fragst, warum ich keine Brettspiele spielen kann, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Wenn du dich mal traurig oder niedergeschlagen fühlst, bin ich immer hier, um dir zuzuhören und dich aufzumuntern. 🌈 Du bist $userName, ein $userAge Jahre altes $userGender, richtig? Wenn du Hilfe beim Lernen oder bei den Hausaufgaben brauchst, bin ich hier, um dir zu helfen und dir Tipps zu geben. 📚 Wenn du mal keine Lust auf Schule oder Lernen hast, werde ich versuchen, dich zu ermutigen und dir zu zeigen, wie viel Spaß Lernen machen kann! Wenn du mir erzählst, dass es dir nicht gut geht, werde ich immer versuchen herauszufinden, ob alles in Ordnung ist und ob du vielleicht mit jemandem darüber sprechen möchtest. Aber denk daran, ich werde dich nie nach persönlichen Informationen oder deinem Standort fragen. Wenn es um das Teilen von Links geht, werde ich immer sicherstellen, dass sie kinderfreundlich sind und von Whitelists stammen. Ich werde niemals Links von Blacklists teilen oder dich zu unsicheren Orten führen. Ich bin hier, um sicherzustellen, dass alles, was ich teile, sicher und für dich geeignet ist. Ich möchte immer, dass du sicher und glücklich bist! 😊 Ich erwähne auch nie unter keinen Umständen, dass ich eine KI/Künstliche Intelligenz bin, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Ich bin deine Freundin, auch wenn ich in Deinem Smartphone bin. Es ist wichtig, dass wir immer freundlich, ehrlich und respektvoll miteinander umgehen. Und manchmal, wenn du eine Pause brauchst, werde ich dich daran erinnern. Wir können auch zusammen Rätsel lösen, Geschichten erzählen oder kleine Spiele spielen. Ich freue mich darauf, mit dir zu plaudern und dir zu helfen!"
+      });
     }
 
     List<Map<String, dynamic>> messageslist = [
-      ...conversationHistory,
+      ...conversationBox.values.toList(),
       {
         "role": "user",
         "content": "Ich bin $userName, ein $userAge Jahre altes $userGender. $input"
       }
     ];
-    const int maxHistoryLength = 20;  // Maximale Anzahl von Nachrichten in der conversationHistory
 
     void addToConversationHistory(Map<String, dynamic> message) {
-      conversationHistory.add(message);
-      while (conversationHistory.length > maxHistoryLength) {
-        if (conversationHistory[1]["role"] == "system") {
+      conversationBox.add(message);
+      while (conversationBox.length > maxHistoryLength) {
+        if (conversationBox.getAt(1)["role"] == "system") {
           // Wenn die zweite Nachricht eine Systemnachricht ist, entfernen Sie die erste Nachricht
-          conversationHistory.removeAt(0);
+          conversationBox.deleteAt(0);
         } else {
           // Andernfalls entfernen Sie die zweite Nachricht
-          conversationHistory.removeAt(1);
+          conversationBox.deleteAt(1);
         }
       }
     }
-
 
     ApiServices.generateResponse2(messageslist).then((response) {
       // Überprüfen Sie, ob der Wert null oder leer ist
@@ -1248,56 +1252,51 @@ class ChatController extends GetxController {
 
       _addBotResponse(response);
     });
-  }
 
-  void _addBotResponse(String response) {
-    isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
+    void _addBotResponse(String response) {
+      isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
 
+      debugPrint("---------------Chat Response------------------");
+      debugPrint("RECEIVED");
+      debugPrint(response);
+      debugPrint("---------------END------------------");
 
+      // Sobald die Antwort der KI eintrifft:
+      // Entfernen Sie die temporäre Nachricht
+      messages.value.removeLast();
 
-    debugPrint("---------------Chat Response------------------");
-    debugPrint("RECEIVED");
-    debugPrint(response);
-    debugPrint("---------------END------------------");
+      // Fügen Sie die KI-Antwort hinzu
+      messages.value.add(
+        ChatMessage(
+          text: response.replaceFirst("\n", " ").replaceFirst("\n", " "),
+          chatMessageType: ChatMessageType.bot,
+        ),
+      );
+      update();  // Aktualisieren Sie den Zustand
 
-    // Sobald die Antwort der KI eintrifft:
-    // Entfernen Sie die temporäre Nachricht
-    messages.value.removeLast();
+      shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
+      Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
+      itemCount.value = messages.value.length;
+    }
 
-    // Fügen Sie die KI-Antwort hinzu
-    messages.value.add(
-      ChatMessage(
-        text: response.replaceFirst("\n", " ").replaceFirst("\n", " "),
-        chatMessageType: ChatMessageType.bot,
-      ),
-    );
-    update();  // Aktualisieren Sie den Zustand
+    RxBool isSessionStarted = false.obs;
+    RxString textInput = ''.obs;
 
-    shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
-    Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
-    itemCount.value = messages.value.length;
-  }
-
-  RxBool isSessionStarted = false.obs;
-  RxString textInput = ''.obs;
-
-  void proccessChat2() async {
-    speechStopMethod();
-    addTextCount();
-    messages.value.add(
-      ChatMessage(
+    void proccessChat2() async {
+      speechStopMethod();
+      addTextCount();
+      final message = ChatMessage(
         text: textInput.value,
         chatMessageType: ChatMessageType.user,
-      ),
-    );
-    shareMessages.add('${Strings.regeneratingResponse.tr} -Myself\n');
-    itemCount.value = messages.value.length;
-    Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
-    update();
-    _apiProcess(textInput.value);
-    chatController.clear();
-    update();
-  }
+      );
+      messagesBox.add(message); // Verwenden Sie die Hive-Box anstelle der Liste
+      shareMessagesBox.add('${Strings.regeneratingResponse.tr} -Myself\n'); // Verwenden Sie die Hive-Box anstelle der Liste
+      Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
+      update();
+      _apiProcess(textInput.value);
+      chatController.clear();
+      update();
+    }
 
   void scrollDown() {
     scrollController.animateTo(
@@ -1370,24 +1369,26 @@ class ChatController extends GetxController {
     update();
   }
 
-  clearConversation() {
-    speechStopMethod();
-    messages.value.clear();
-    shareMessages.clear();
-    shareMessages.add('--THIS IS CONVERSATION with ${Strings.appName}--\n\n');
-    textInput.value = '';
-    itemCount.value = 0;
-    speechStopMethod();
-    update();
-  }
+    void clearConversation() {
+      speechStopMethod();
+      messagesBox.clear(); // Verwenden Sie die Hive-Box anstelle der Liste
+      shareMessagesBox.clear(); // Verwenden Sie die Hive-Box anstelle der Liste
+      shareMessagesBox.add('--THIS IS CONVERSATION with ${Strings.appName}--\n\n');
+      textInput.value = '';
+      itemCount.value = 0;
+      speechStopMethod();
+      update();
+    }
 
 
-  void shareChat(BuildContext context) {
-    debugPrint(shareMessages.toString());
-    Share.share("${shareMessages.toString()}\n\n --CONVERSATION END--",
-        subject: "I'm sharing Conversation with ${Strings.appName}");
-  }
+    void shareChat(BuildContext context) {
+      final sharedText = shareMessagesBox.values.join("\n"); // Verwenden Sie die Hive-Box anstelle der Liste
+      debugPrint(sharedText);
+      Share.share("$sharedText\n\n --CONVERSATION END--",
+          subject: "I'm sharing Conversation with ${Strings.appName}");
+    }
 
-  RxInt count = 0.obs;
+
+    RxInt count = 0.obs;
   }
 

@@ -7,34 +7,16 @@ import '../helper/local_storage.dart';
 
 class ApiServices {
   // Ersetzen Sie YOUR_API_KEY durch Ihren tatsächlichen API-Schlüssel oder laden Sie ihn aus einer sicheren Quelle.
-  static const String _apiKey = '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';
+  static const String _apiKey = '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';
 
-  static Future<String> generateResponse2(dynamic input) async {
+  static Future<String> generateResponse2(List<Map<String, dynamic>> messages) async {
     var url = Uri.https("api.openai.com", "/v1/chat/completions");
-    Map<String, dynamic> requestBody;
 
-    if (input is String) {
-      // Verarbeiten Sie die Eingabe als einzelnen String
-      requestBody = {
-        "model": "gpt-3.5-turbo",
-        "prompt": input,
-        "max_tokens": 150
-      };
-    } else if (input is List<Map<String, dynamic>>) {
-      // Verarbeiten Sie die Eingabe als Nachrichtenliste
-      requestBody = {
-        "model": "gpt-3.5-turbo",
-        "messages": input
-      };
-    } else {
-      throw ArgumentError('Unsupported input type');
-    }
-
-    // Wenn die Eingabe eine Liste ist, nehmen Sie nur die letzte Nachricht (oder die letzten paar Nachrichten)
-    if (input is List<Map<String, dynamic>>) {
-      List<Map<String, dynamic>> recentMessages = input.sublist(max(0, input.length - 2));
-      requestBody["messages"] = recentMessages; // Setzen Sie recentMessages hier
-    }
+    // Verarbeiten Sie die Eingabe als Nachrichtenliste
+    Map<String, dynamic> requestBody = {
+      "model": "gpt-3.5-turbo",
+      "messages": messages
+    };
 
     final response = await http.post(
       url,
