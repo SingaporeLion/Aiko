@@ -1,7 +1,7 @@
 import 'config.dart';
 
 class Strings {
-  static const String appName = "AIKO";
+  static const String appName = "AIKONIA";
 
   static const String chatWithAIKO = "Chat With $appName";
   static const String chatWithAIKOSubTitle =
@@ -102,9 +102,9 @@ class Strings {
   static const String terms = "Terms & Condition";
   static const String refundPolicy = "Refund Policy";
 
-  static const String privacyPolicyUrl = "https://aiko.appdevs.net/privacy";
-  static const String termsUrl = "https://aiko.appdevs.net/terms";
-  static const String refundPolicyUrl = "https://aiko.appdevs.net/refund";
+  static const String privacyPolicyUrl = "https://aikonia.appdevs.net/privacy";
+  static const String termsUrl = "https://aikonia.appdevs.net/terms";
+  static const String refundPolicyUrl = "https://aikonia.appdevs.net/refund";
 
 
   static const String myPlan = "My Plan";
@@ -117,7 +117,7 @@ class Strings {
 
   static const String contentWriting = "Content Writing";
   static const String contentWritingSubTitle =
-    "Generate your content with AIKO now! with powerful AI· Content Writer for all your content writing needs·";
+    "Generate your content with AIKONIA now! with powerful AI· Content Writer for all your content writing needs·";
 
   static const String selectType = "Select Type";
   static const String selectYourSocialMedia = "Select Your Social Media";
@@ -135,12 +135,12 @@ class Strings {
 
   static const String keyWordCreating = "Key Word Generate";
   static const String hashTagCreatorSubTitle =
-      "Generate your hashTags with AIKO now for your Social Media·";
+      "Generate your hashTags with AIKONIA now for your Social Media·";
 
 //from here to //end  copy the code and pest it exactly in your code in this order (version 3.7.0)
 
   static const String dietChartCreating = "Diet chart Generate";
-  static const String dietChartCreatorSubTitle = "Generate your diet chart with AIKO now for healthy life·";
+  static const String dietChartCreatorSubTitle = "Generate your diet chart with AIKONIA now for healthy life·";
   static const String currentWeight = "Current weight in (kg)";
   static const String targetWeight = "Target weight in (kg)";
   static const String height = "Height in (cm)";

@@ -117,7 +117,7 @@ class English {
 
   static const String contentWriting = "Content Writing";
   static const String contentWritingSubTitle =
-      "Generate your content with AIKO now! with powerful AI· Content Writer for all your content writing needs·";
+      "Generate your content with AIKONIA now! with powerful AI· Content Writer for all your content writing needs·";
 
   static const String selectType = "Select Type";
   static const String selectYourSocialMedia = "Select Your Social Media";
@@ -135,11 +135,11 @@ class English {
 
   static const String keyWordCreating = "Key Word Generate";
   static const String hashTagCreatorSubTitle =
-      "Generate your hashTags with AIKO now for your Social Media·";
+      "Generate your hashTags with AIKONIA now for your Social Media·";
 
 
   static const String dietChartCreating = "Diet chart Generate";
-  static const String dietChartCreatorSubTitle = "Generate your diet chart with AIKO now for healthy life·";
+  static const String dietChartCreatorSubTitle = "Generate your diet chart with AIKONIA now for healthy life·";
   static const String currentWeight = "Current weight in (kg)";
   static const String targetWeight = "Target weight in (kg)";
   static const String height = "Height in (cm)";

@@ -1310,33 +1310,38 @@ class ChatController extends GetxController {
   RxString result = "".obs;
   RxBool isListening = false.obs;
   var languageList = LocalStorage.getLanguage();
-  late stt.SpeechToText speech;
 
-  void listen(BuildContext context) async {
-    speechStopMethod();
-    chatController.text = '';
-    result.value = '';
-    userInput.value = '';
-    if (isListening.value == false) {
-      bool available = await speech.initialize(
-        onStatus: (val) => debugPrint('*** onStatus: $val'),
-        onError: (val) => debugPrint('### onError: $val'),
-      );
-      if (available) {
-        isListening.value         = true;
-        speech.listen(
-            localeId: languageList[0],
-            onResult: (val) {
-              chatController.text = val.recognizedWords.toString();
-              userInput.value = val.recognizedWords.toString();
-            });
+    late stt.SpeechToText speech = stt.SpeechToText();
+
+    void listen(BuildContext context) async {
+      speechStopMethod();
+      chatController.text = '';
+      result.value = '';
+      userInput.value = '';
+      if (isListening.value == false) {
+        bool available = await speech.initialize(
+          onStatus: (val) => debugPrint('*** onStatus: $val'),
+          onError: (val) => debugPrint('### onError: $val'),
+        );
+        if (available) {
+          isListening.value = true;
+          speech.listen(
+              localeId: languageList[0],
+              onResult: (val) {
+                chatController.text = val.recognizedWords.toString();
+                userInput.value = val.recognizedWords.toString();
+              });
+        }
+      } else {
+        isListening.value = false;
+        speech.stop();
+        update();
       }
-    } else {
-      isListening.value = false;
-      speech.stop();
-      update();
     }
-  }
+
+    void speechStopMethod() {
+      // Ihr Code für speechStopMethod
+    }
 
   final FlutterTts flutterTts = FlutterTts();
 

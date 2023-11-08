@@ -115,7 +115,7 @@ class Spanish {
 
   static const String contentWriting = "Redacción de contenido";
   static const String contentWritingSubTitle =
-      "Generate your content with AIKO now! with powerful AI· Content Writer for all your content writing needs·";
+      "Generate your content with AIKONIA now! with powerful AI· Content Writer for all your content writing needs·";
 
   static const String selectType = "Seleccione tipo";
   static const String selectYourSocialMedia = "Seleccione sus redes sociales";
@@ -133,11 +133,11 @@ class Spanish {
 
   static const String keyWordCreating = "Palabra clave Generar";
   static const String hashTagCreatorSubTitle =
-      "Genere sus hashtags con AIKO ahora para sus redes sociales ·";
+      "Genere sus hashtags con AIKONIA ahora para sus redes sociales ·";
 
 
   static const String dietChartCreating = "Generar plan de dieta";
-  static const String dietChartCreatorSubTitle = "Genera tu plan de dieta con AIKO ahora para una vida saludable·";
+  static const String dietChartCreatorSubTitle = "Genera tu plan de dieta con AIKONIA ahora para una vida saludable·";
   static const String currentWeight = "Peso actual (kg)";
   static const String targetWeight = "Peso objetivo (kg)";
   static const String height = "Altura (cm)";

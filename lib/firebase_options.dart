@@ -66,6 +66,6 @@ class DefaultFirebaseOptions {
     storageBucket: 'aiko-e581f.appspot.com',
     androidClientId: '1014761899239-0rtho0nu0f4tvtd8q7mc1140heq8p1s1.apps.googleusercontent.com',
     iosClientId: '1014761899239-317gii6opb3ku0tgbp7qi8vp5orir0ta.apps.googleusercontent.com',
-    iosBundleId: 'net.appdevsx.aiko',
+    iosBundleId: 'net.appdevsx.aikonia',
   );
 }
