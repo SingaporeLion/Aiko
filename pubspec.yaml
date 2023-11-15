@@ -1,4 +1,4 @@
-name: AIKONIA
+name: AIKO
 description: Lynn ist dein digitaler Freund zum Plaudern und Lernen!
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -75,20 +75,21 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^2.0.3
   flutter_rename_app_plus3: ^1.2.1
-
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.6
   #  change_app_package_name: ^1.1.0
   #  flutter_app_name: ^0.1.1
   flutter_launcher_icons: ^0.13.1
   # flutter_app_name:
-  #  name: "AIKONIA"   # >> Set AppName First
+  #  name: "AIKO"   # >> Set AppName First
 
 flutter_rename_app_plus:
-  application_name: AIKONIA
-  dart_package_name: aikonia
+  application_name: AIKO
+  dart_package_name: aiko
   application_id: com.tech.aiko
   bundle_id: com.tech.aiko
   android_package_name: com.tech.aiko
-  ios_bundle_name: AIKONIA
+  ios_bundle_name: AIKO
 
 
 dependency_overrides:

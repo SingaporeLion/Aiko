@@ -315,9 +315,6 @@ class ChatScreen extends StatelessWidget {
                               controller.proccessChat2();
                             }
                             Get.back();
-                          } else if (index == 1) {
-                            controller.clearConversation();
-                            Get.back();
                           } else if (index == 2) {
                             if (controller.shareMessages.isEmpty) {
                               Get.snackbar(

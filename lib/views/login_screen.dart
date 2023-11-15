@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:AIKO/routes/routes.dart';
+import 'package:AIKO/routes//routes.dart';
 
 class WelcomeScreen extends StatefulWidget {
   @override

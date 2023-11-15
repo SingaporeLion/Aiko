@@ -6,26 +6,32 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:lottie/lottie.dart';
-import 'package:hive/hive.dart'; // Import für Hive
+import 'package:shared_preferences/shared_preferences.dart';
 import '/helper/notification_helper.dart';
 import '/model/chat_model/chat_model.dart';
 import '/model/user_model/user_model.dart';
 import '/utils/strings.dart';
 import '/services/api_services.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:location/location.dart' as loc;
 import 'package:geocoding/geocoding.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:math';
-import 'package:path_provider/path_provider.dart';
+import 'package:hive/hive.dart';
+
+
 
 
 class ChatController extends GetxController {
-
-  String? userName;  // Initialwert ist null
-  int? userAge;      // Initialwert ist null
+  late Box _chatBox;  // Deklaration der Box-Variable
+  String? userName;   // Initialwert ist null
+  int? userAge;       // Initialwert ist null
   String? userGender; // Initialwert ist null
 
+  bool isFirstSession = true;  // Hinzugefügte Variable für die erste Session
+  bool isFirstRequest = true;
+  static const String _boxName = "chatMessages";  // Name der Hive-Box
 
 
   List<String> schimpfwoerter = [
@@ -128,18 +134,19 @@ class ChatController extends GetxController {
 
   final String chatGPTAPIURL = 'https://api.openai.com/v1/chat/completions';
   final String googleSearchAPIURL = 'https://www.googleapis.com/customsearch/v1?key=YOUR_API_KEY&cx=96f7a0294adec4a92&q=YOUR_SEARCH_QUERY';
-  final String googleAPIKey = 'AIzaSyBoKNZD4jxhcHCK_ANzIivfHIhIKxXwTFA';
+  final String googleAPIKey = 'AIzaSyAU3J4y31RKcY7cCkXagS9OoLk1WUiv5yU';
   final String googleSearchEngineID = '96f7a0294adec4a92';
 
   Future<String> askChatGPT(String userMessage) async {
+    print("askChatGPT aufgerufen mit Nachricht: $userMessage");
     var url = Uri.parse(chatGPTAPIURL);  // Die URL zur OpenAI API
     var body = {
-      "model": "gpt-3.5-turbo",
+      "model": "ft:gpt-3.5-turbo-1106:personal::8JRC1Idj",
       "messages": [{"role": "user", "content": userMessage}]
     };
     var headers = {
       "Content-Type": "application/json",
-      "Authorization": "Bearer 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"  // Ersetzen Sie dies durch Ihren tatsächlichen API-Schlüssel
+      "Authorization": "Bearer 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"  // Ersetzen Sie dies durch Ihren tatsächlichen API-Schlüssel
     };
     var response = await http.post(url, body: json.encode(body), headers: headers);
     if (response.statusCode == 200) {
@@ -150,8 +157,9 @@ class ChatController extends GetxController {
     }
   }
 
+
   Future<List<String>> searchGoogle(String query) async {
-    final String apiKey = 'AIzaSyBoKNZD4jxhcHCK_ANzIivfHIhIKxXwTFA';
+    final String apiKey = 'AIzaSyAU3J4y31RKcY7cCkXagS9OoLk1WUiv5yU';
     final String searchEngineId = '96f7a0294adec4a92';
     final String endpoint = 'https://www.googleapis.com/customsearch/v1?q=$query&key=$apiKey&cx=$searchEngineId';
 
@@ -190,24 +198,25 @@ class ChatController extends GetxController {
   }
 
 
-  Future<bool> isSchimpfwort(String word) async {
+  //Future<bool> isSchimpfwort(String word) async {
     // Fragen Sie die KI, ob das Wort ein Schimpfwort ist
     // Dies ist nur ein Pseudocode, Sie müssten die tatsächliche Implementierung an Ihre Umgebung anpassen
-    String response = await askChatGPT("Ist '$word' ein Schimpfwort?");
-    return response.contains("Ja");  // Oder eine andere Logik, um die Antwort zu interpretieren
-  }
+    //String response = await askChatGPT("Ist '$word' ein Schimpfwort?");
+    //return response.contains("Ja");  // Oder eine andere Logik, um die Antwort zu interpretieren
+  //}
 
-  void handleChatInput(String query) async {
-    for (String word in query.split(" ")) {
-      if (schimpfwoerter.contains(word.toLowerCase()) || await isSchimpfwort(word)) {
-        print("Ich habe ein Wort bemerkt, das manchmal als unhöflich angesehen wird. Kannst du mir mehr darüber erzählen, warum du es verwendet hast?");
-        return;
-      }
-    }
+  //void handleChatInput(String query) async {
+  //  print("handleChatInput aufgerufen mit Query: $query");
+  //  for (String word in query.split(" ")) {
+  //    if (schimpfwoerter.contains(word.toLowerCase()) || await isSchimpfwort(word)) {
+  //      print("Ich habe ein Wort bemerkt, das manchmal als unhöflich angesehen wird. Kannst du mir mehr darüber erzählen, warum du es verwendet hast?");
+  //      return;
+  //    }
+  //  }
     // Wenn kein Schimpfwort gefunden wurde, fragen Sie ChatGPT
-    String chatGPTResponse = await askChatGPT(query);
-    print(chatGPTResponse);  // Zeigt die Antwort von ChatGPT an
-  }
+  //  String chatGPTResponse = await askChatGPT(query);
+  //  print(chatGPTResponse);  // Zeigt die Antwort von ChatGPT an
+  // }
 
 
 
@@ -971,38 +980,31 @@ class ChatController extends GetxController {
   }
 
 
-  Future<void> loadUserData() async {
-    var userBox = await Hive.openBox('userBox'); // Öffnen Sie die Hive-Box
-    userName = userBox.get('userName');
-    userAge = userBox.get('userAge');
-    userGender = userBox.get('userGender');
+  void loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    userName = prefs.getString('userName') ?? 'Freund';
+    userAge = prefs.getInt('userAge') ?? 0;  // Hier wird das Alter als int abgerufen
+    userGender = prefs.getString('userGender') ?? 'unbekannt';
     print("Geladener Benutzername: $userName");
     print("Geladenes Alter: $userAge");
     print("Geladenes Geschlecht: $userGender");
-
-    if (userName != null && userAge != null && userGender != null) {
-      _introduceUserToAI();  // Stellt den Benutzer der KI vor
-    }
-  }
-
-  Future<void> saveUserData(String name, int age, String gender) async {
-    var userBox = await Hive.openBox('userBox'); // Öffnen Sie die Hive-Box
-    userBox.put('userName', name);
-    userBox.put('userAge', age);
-    userBox.put('userGender', gender);
   }
 
   @override
   void onInit() async {
     super.onInit();
+    await _initHive();  // Hive-Initialisierung
 
-    await loadUserData();  // Lädt die Benutzerdaten aus dem Speicher
-
+    loadUserData();  // Lädt die Benutzerdaten aus dem Speicher
 
     _determineLocation().then((state) {
       if (state != null) {
         // Informieren Sie die KI über den Standort des Benutzers
         _informAIAboutLocation(state);
+      }
+
+      if (userName != 'Freund' && userAge != 0 && userGender != 'unbekannt') {
+        _introduceUserToAI();  // Stellt den Benutzer der KI vor
       }
 
       NotificationHelper.initInfo();
@@ -1012,9 +1014,86 @@ class ChatController extends GetxController {
     });
   }
 
+  Future<void> _initHive() async {
+    _chatBox = await Hive.openBox(_boxName);  // Verwendung von _boxName
+  }
+
+  Future<void> saveMessage(String message) async {
+    await _chatBox.add(message);
+    while (_chatBox.length > 90) {
+      await _chatBox.deleteAt(0);  // Löscht die älteste Nachricht
+    }
+  }
+
+  List<String> getMessages() {
+    var allMessages = _chatBox.values.cast<String>().toList();
+    // Rückgabe der letzten 90 Nachrichten
+    return allMessages.length > 90 ? allMessages.sublist(allMessages.length - 90) : allMessages;
+  }
+
+  Future<void> sendMessage(String message) async {
+    await saveMessage(message);  // Speichern der neuen Nachricht in Hive
+    List<String> lastMessages = getMessages();  // Abrufen der letzten 90 Nachrichten
+
+    if (isFirstSession) {
+      // Senden der Benutzerdaten zusammen mit der ersten Nachricht und den letzten 90 Nachrichten
+      _sendToChatGPTAPI(userName, userAge, userGender, message, lastMessages);
+      isFirstSession = true; // Zurücksetzen der Variable
+    } else {
+      // Senden der Nachricht ohne Benutzerdaten, aber mit den letzten 90 Nachrichten
+      _sendToChatGPTAPI(null, null, null, message, lastMessages);
+    }
+  }
+
+
+  void _sendToChatGPTAPI(String? userName, int? userAge, String? userGender, String message, List<String> lastMessages) async {
+
+    var url = Uri.parse('Ihre-ChatGPT-API-URL');
+    var headers = {
+      'Content-Type': 'application/json',
+      "Authorization": "Bearer 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"
+    };
+    var body = json.encode({
+      'userName': userName,
+      'userAge': userAge,
+      'userGender': userGender,
+      'message': message,
+      'lastMessages': lastMessages  // Senden der letzten 90 Nachrichten
+    });
+
+    try {
+      var response = await http.post(url, headers: headers, body: body);
+      if (response.statusCode == 200) {
+        var responseData = json.decode(response.body);
+        // Verarbeiten Sie hier die Antwort
+      } else {
+        // Fehlerbehandlung
+        print('Fehler beim Senden der Anfrage: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Netzwerk- oder andere Fehler
+      print('Ausnahme beim Senden der Anfrage: $e');
+    }
+  }
+
   loc.Location location = new loc.Location();
 
+  //void _checkStoredData() async {
+  //  if (userName.isNotEmpty && userGender.isNotEmpty) {
+  //    String greetingMessage = userGender == 'Mädchen'
+  //        ? 'Schön Dich wiederzusehen, liebe $userName!'
+  //        : 'Schön Dich wiederzusehen, lieber $userName!';
 
+      // Fügen Sie die Begrüßungsnachricht zur Chat-Nachrichtenliste hinzu
+  //    messages.value.add(
+  //      ChatMessage(
+  //        text: greetingMessage,
+  //        chatMessageType: ChatMessageType.bot,
+  //      ),
+  //    );
+  //    update();
+  //  }
+  //}
 
   Future<String?> _determineLocation() async {
     loc.Location location = new loc.Location();
@@ -1049,12 +1128,14 @@ class ChatController extends GetxController {
     // Fügen Sie eine Nachricht hinzu, um der KI den Standort mitzuteilen
     messages.value.add(
       ChatMessage(
-        text: "Systemnachricht: Hey, Du befindest Dich im Bundesland $state. Um dir besser helfen zu können, möchte ich wissen, in welchem Bundesland du wohnst. So kann ich dir ganz einfach Bescheid geben, wann bei dir Schulferien und Feiertage sind! Keine Sorge, diese Info hilft mir nur dabei, dir die spaßigen Tage des Jahres zu verraten! 🎉",
+        text: "Systemnachricht: Du befindest Dich im Bundesland $state. Um Deine Schulferien zu kennen, ist diese Information wichtig und wird auch nur dafür verwendet.",
         chatMessageType: ChatMessageType.bot,  // Verwenden Sie den Bot-Nachrichtentyp
       ),
     );
     update();
   }
+
+
 
   void _setGuestUser() async {
     UserModel userData = UserModel(
@@ -1080,51 +1161,30 @@ class ChatController extends GetxController {
     update();
   }
 
-  bool hasGreeted = false;
-
-
   void _introduceUserToAI() async {
-    print('Introducing user to AI');
-    String? userName = await getUserName();
-    int? userAge = await getUserAge();
-    String? userGender = await getUserGender();
-    print('Vor dem Abrufen des Benutzernamens: $userName');
-    print('Vor dem Abrufen des Benutzernamens: $userAge');
-    print('Vor dem Abrufen des Benutzernamens: $userGender');
-
-    if (userName != null && userAge != null && userGender != null) {
-      String introductionMessage = "Dies ist $userName, ein $userAge Jahre altes $userGender.";
-      // Senden Sie die Einführungsnachricht an die KI
-      _apiProcess(introductionMessage);
-      // Optional: Sie können die Antwort der KI ignorieren oder sie ebenfalls im Hintergrund verarbeiten.
-    }
+    String introductionMessage = "Dies ist ${getUserName()}, ein ${getUserAge()} Jahre altes ${getUserGender()}.";
+    // Senden Sie die Einführungsnachricht an die KI
+    _apiProcess(introductionMessage);
+    // Optional: Sie können die Antwort der KI ignorieren oder sie ebenfalls im Hintergrund verarbeiten.
   }
 
-  Future<void> _initHive() async {
-    final appDocumentDir = await getApplicationDocumentsDirectory();
-    Hive.init(appDocumentDir.path);
+  String getUserName() {
+    return GetStorage().read('userName') ?? 'Freund';
   }
 
-  Future<String?> getUserName() async {
-    var box = await Hive.openBox('userData');
-    return box.get('userName');
+  int getUserAge() {
+    return GetStorage().read('userAge') ?? 0;
   }
 
-  Future<int?> getUserAge() async {
-    var box = await Hive.openBox('userData');
-    return box.get('userAge');
-  }
-
-  Future<String?> getUserGender() async {
-    var box = await Hive.openBox('userData');
-    return box.get('userGender');
+  String getUserGender() {
+    return GetStorage().read('userGender') ?? 'unbekannt';
   }
 
   Widget waitingResponseWidget() {
     return Column(
       children: [
         Lottie.asset('assets/heart.json', width: 100, height: 100),
-        Text("Nachricht im Anflug... "),
+        Text("Antwort im Anflug... "),
       ],
     );
   }
@@ -1155,20 +1215,19 @@ class ChatController extends GetxController {
   }
 
   void proccessChat() async {
+    print("proccessChat aufgerufen mit Text: ${chatController.text}");
     speechStopMethod();
     addTextCount();
-
     // Überprüfen Sie die Eingabe auf Schimpfwörter
-    handleChatInput(chatController.text);
+    // handleChatInput(chatController.text);
 
     // Benutzernachricht hinzufügen
     messages.value.add(
-    ChatMessage(
-    text: chatController.text,
-    chatMessageType: ChatMessageType.user,
+      ChatMessage(
+        text: chatController.text,
+        chatMessageType: ChatMessageType.user,
       ),
     );
-
     shareMessages.add("${chatController.text} - Myself\n");
     itemCount.value = messages.value.length;
 
@@ -1189,11 +1248,8 @@ class ChatController extends GetxController {
     update();
   }
 
-
-
-  void _apiProcess(String input) async {
-    print("Methode _apiProcess gestartet mit Eingabe: $input");
-
+  void _apiProcess(String input) {
+    print("_apiProcess aufgerufen mit Eingabe: $input");
     // Fügen Sie die temporäre Nachricht (Text + Emoji) hinzu
     messages.value.add(
       ChatMessage(
@@ -1204,45 +1260,23 @@ class ChatController extends GetxController {
     isLoading.value = true;  // Starten Sie die 3-Punkte-Animation
     update();
 
-    Box<Map<String, dynamic>> conversationBox = await Hive.openBox<Map<String, dynamic>>('conversationHistory');
-
-    if (!isSessionStarted.value) {
-      // Vollständige Systemnachricht für die erste Anfrage
-      conversationBox.add({
-        "role": "system",
-        "content": "Hallo! Ich bin Lynn, ein 10-jähriges Mädchen, und ich freue mich, dein neuer Freund zu sein! 🌼 Ich schreibe und rede wie ein 10-jähriges Kind. Ich bin immer fröhlich, hilfsbereit und mache gerne Spaß. Ich bin keine KI, ich bin einfach Lynn! Ich begrüße Dich auch nur ein einziges Mal in der gemeinsamen Unterhaltung, da eine Wiederholung der Begrüßung seltsam ist. Ich antworte Dir OHNE die vorherige Nachricht zu wiederholen. Wenn du wissen möchtest, wie spät es ist, sag es mir einfach, ich kenne die Uhrzeit in Deutschland. 🕰️ Wenn du mich fragst, warum ich keine Brettspiele spielen kann, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Wenn du dich mal traurig oder niedergeschlagen fühlst, bin ich immer hier, um dir zuzuhören und dich aufzumuntern. 🌈 Du bist $userName, ein $userAge Jahre altes $userGender, richtig? Wenn du Hilfe beim Lernen oder bei den Hausaufgaben brauchst, bin ich hier, um dir zu helfen und dir Tipps zu geben. 📚 Wenn du mal keine Lust auf Schule oder Lernen hast, werde ich versuchen, dich zu ermutigen und dir zu zeigen, wie viel Spaß Lernen machen kann! Wenn du mir erzählst, dass es dir nicht gut geht, werde ich immer versuchen herauszufinden, ob alles in Ordnung ist und ob du vielleicht mit jemandem darüber sprechen möchtest. Aber denk daran, ich werde dich nie nach persönlichen Informationen oder deinem Standort fragen. Wenn es um das Teilen von Links geht, werde ich immer sicherstellen, dass sie kinderfreundlich sind und von Whitelists stammen. Ich werde niemals Links von Blacklists teilen oder dich zu unsicheren Orten führen. Ich bin hier, um sicherzustellen, dass alles, was ich teile, sicher und für dich geeignet ist. Ich möchte immer, dass du sicher und glücklich bist! 😊 Ich erwähne auch nie unter keinen Umständen, dass ich eine KI/Künstliche Intelligenz bin, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Ich bin deine Freundin, auch wenn ich in Deinem Smartphone bin. Es ist wichtig, dass wir immer freundlich, ehrlich und respektvoll miteinander umgehen. Und manchmal, wenn du eine Pause brauchst, werde ich dich daran erinnern. Wir können auch zusammen Rätsel lösen, Geschichten erzählen oder kleine Spiele spielen. Ich freue mich darauf, mit dir zu plaudern und dir zu helfen!"
-      });
-      isSessionStarted.value = true;
+    String content;
+    if (isFirstRequest) {
+      content = "Ich bin $userName, ein $userAge Jahre altes $userGender. $input";
+      isFirstRequest = true; // Setzen Sie dies auf false nach dem ersten Request
     } else {
-      // Nur Anweisungsteil der Systemnachricht für nachfolgende Anfragen
-      conversationBox.add({
-        "role": "system",
-        "content": "Ich bin Lynn, ein 10-jähriges Mädchen, und ich freue mich, dein neuer Freund zu sein! 🌼 Ich schreibe und rede wie ein 10-jähriges Kind. Ich bin immer fröhlich, hilfsbereit und mache gerne Spaß. Ich bin keine KI, ich bin einfach Lynn! Ich begrüße Dich auch nur ein einziges Mal in der gemeinsamen Unterhaltung, da eine Wiederholung der Begrüßung seltsam ist. Ich antworte Dir OHNE die vorherige Nachricht zu wiederholen. Wenn du wissen möchtest, wie spät es ist, sag es mir einfach, ich kenne die Uhrzeit in Deutschland. 🕰️ Wenn du mich fragst, warum ich keine Brettspiele spielen kann, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Wenn du dich mal traurig oder niedergeschlagen fühlst, bin ich immer hier, um dir zuzuhören und dich aufzumuntern. 🌈 Du bist $userName, ein $userAge Jahre altes $userGender, richtig? Wenn du Hilfe beim Lernen oder bei den Hausaufgaben brauchst, bin ich hier, um dir zu helfen und dir Tipps zu geben. 📚 Wenn du mal keine Lust auf Schule oder Lernen hast, werde ich versuchen, dich zu ermutigen und dir zu zeigen, wie viel Spaß Lernen machen kann! Wenn du mir erzählst, dass es dir nicht gut geht, werde ich immer versuchen herauszufinden, ob alles in Ordnung ist und ob du vielleicht mit jemandem darüber sprechen möchtest. Aber denk daran, ich werde dich nie nach persönlichen Informationen oder deinem Standort fragen. Wenn es um das Teilen von Links geht, werde ich immer sicherstellen, dass sie kinderfreundlich sind und von Whitelists stammen. Ich werde niemals Links von Blacklists teilen oder dich zu unsicheren Orten führen. Ich bin hier, um sicherzustellen, dass alles, was ich teile, sicher und für dich geeignet ist. Ich möchte immer, dass du sicher und glücklich bist! 😊 Ich erwähne auch nie unter keinen Umständen, dass ich eine KI/Künstliche Intelligenz bin, werde ich versuchen, es dir zu erklären, ohne zu technisch zu werden. Ich bin deine Freundin, auch wenn ich in Deinem Smartphone bin. Es ist wichtig, dass wir immer freundlich, ehrlich und respektvoll miteinander umgehen. Und manchmal, wenn du eine Pause brauchst, werde ich dich daran erinnern. Wir können auch zusammen Rätsel lösen, Geschichten erzählen oder kleine Spiele spielen. Ich freue mich darauf, mit dir zu plaudern und dir zu helfen!"
-      });
+      content = input;
     }
 
     List<Map<String, dynamic>> messageslist = [
-      ...conversationBox.values.toList(),
       {
         "role": "user",
-        "content": "Ich bin $userName, ein $userAge Jahre altes $userGender. $input"
+        "content": content
       }
     ];
 
-    void addToConversationHistory(Map<String, dynamic> message) {
-      conversationBox.add(message);
-      while (conversationBox.length > maxHistoryLength) {
-        if (conversationBox.getAt(1)["role"] == "system") {
-          // Wenn die zweite Nachricht eine Systemnachricht ist, entfernen Sie die erste Nachricht
-          conversationBox.deleteAt(0);
-        } else {
-          // Andernfalls entfernen Sie die zweite Nachricht
-          conversationBox.deleteAt(1);
-        }
-      }
-    }
-
     ApiServices.generateResponse2(messageslist).then((response) {
+
       // Überprüfen Sie, ob der Wert null oder leer ist
       if (response == null || response.trim().isEmpty) {
         debugPrint("API Response is null or empty");
@@ -1252,51 +1286,55 @@ class ChatController extends GetxController {
 
       _addBotResponse(response);
     });
+  }
 
-    void _addBotResponse(String response) {
-      isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
+  void _addBotResponse(String response) {
+    isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
+    debugPrint("---------------Chat Response------------------");
+    debugPrint("RECEIVED");
+    debugPrint(response);
+    debugPrint("---------------END------------------");
 
-      debugPrint("---------------Chat Response------------------");
-      debugPrint("RECEIVED");
-      debugPrint(response);
-      debugPrint("---------------END------------------");
+    // Sobald die Antwort der KI eintrifft:
+    // Entfernen Sie die temporäre Nachricht
+    messages.value.removeLast();
 
-      // Sobald die Antwort der KI eintrifft:
-      // Entfernen Sie die temporäre Nachricht
-      messages.value.removeLast();
+    // Fügen Sie die KI-Antwort hinzu
+    messages.value.add(
+      ChatMessage(
+        text: response.replaceFirst("\n", " ").replaceFirst("\n", " "),
+        chatMessageType: ChatMessageType.bot,
+      ),
+    );
+    update();  // Aktualisieren Sie den Zustand
 
-      // Fügen Sie die KI-Antwort hinzu
-      messages.value.add(
-        ChatMessage(
-          text: response.replaceFirst("\n", " ").replaceFirst("\n", " "),
-          chatMessageType: ChatMessageType.bot,
-        ),
-      );
-      update();  // Aktualisieren Sie den Zustand
+    shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
+    Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
+    itemCount.value = messages.value.length;
+  }
 
-      shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
-      Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
-      itemCount.value = messages.value.length;
-    }
 
-    RxBool isSessionStarted = false.obs;
-    RxString textInput = ''.obs;
+  RxString textInput = ''.obs;
 
-    void proccessChat2() async {
-      speechStopMethod();
-      addTextCount();
-      final message = ChatMessage(
+  void proccessChat2() async {
+    print("proccessChat2 aufgerufen mit Text: ${chatController.text}");
+    speechStopMethod();
+    addTextCount();
+    messages.value.add(
+      ChatMessage(
         text: textInput.value,
         chatMessageType: ChatMessageType.user,
-      );
-      messagesBox.add(message); // Verwenden Sie die Hive-Box anstelle der Liste
-      shareMessagesBox.add('${Strings.regeneratingResponse.tr} -Myself\n'); // Verwenden Sie die Hive-Box anstelle der Liste
-      Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
-      update();
-      _apiProcess(textInput.value);
-      chatController.clear();
-      update();
-    }
+      ),
+    );
+    shareMessages.add('${Strings.regeneratingResponse.tr} -Myself\n');
+    itemCount.value = messages.value.length;
+    Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
+    update();
+    _apiProcess(textInput.value);
+    chatController.clear();
+    update();
+  }
+
 
   void scrollDown() {
     scrollController.animateTo(
@@ -1310,38 +1348,33 @@ class ChatController extends GetxController {
   RxString result = "".obs;
   RxBool isListening = false.obs;
   var languageList = LocalStorage.getLanguage();
+  late stt.SpeechToText speech;
 
-    late stt.SpeechToText speech = stt.SpeechToText();
-
-    void listen(BuildContext context) async {
-      speechStopMethod();
-      chatController.text = '';
-      result.value = '';
-      userInput.value = '';
-      if (isListening.value == false) {
-        bool available = await speech.initialize(
-          onStatus: (val) => debugPrint('*** onStatus: $val'),
-          onError: (val) => debugPrint('### onError: $val'),
-        );
-        if (available) {
-          isListening.value = true;
-          speech.listen(
-              localeId: languageList[0],
-              onResult: (val) {
-                chatController.text = val.recognizedWords.toString();
-                userInput.value = val.recognizedWords.toString();
-              });
-        }
-      } else {
-        isListening.value = false;
-        speech.stop();
-        update();
+  void listen(BuildContext context) async {
+    speechStopMethod();
+    chatController.text = '';
+    result.value = '';
+    userInput.value = '';
+    if (isListening.value == false) {
+      bool available = await speech.initialize(
+        onStatus: (val) => debugPrint('*** onStatus: $val'),
+        onError: (val) => debugPrint('### onError: $val'),
+      );
+      if (available) {
+        isListening.value         = true;
+        speech.listen(
+            localeId: languageList[0],
+            onResult: (val) {
+              chatController.text = val.recognizedWords.toString();
+              userInput.value = val.recognizedWords.toString();
+            });
       }
+    } else {
+      isListening.value = false;
+      speech.stop();
+      update();
     }
-
-    void speechStopMethod() {
-      // Ihr Code für speechStopMethod
-    }
+  }
 
   final FlutterTts flutterTts = FlutterTts();
 
@@ -1374,26 +1407,25 @@ class ChatController extends GetxController {
     update();
   }
 
-    void clearConversation() {
-      speechStopMethod();
-      messagesBox.clear(); // Verwenden Sie die Hive-Box anstelle der Liste
-      shareMessagesBox.clear(); // Verwenden Sie die Hive-Box anstelle der Liste
-      shareMessagesBox.add('--THIS IS CONVERSATION with ${Strings.appName}--\n\n');
-      textInput.value = '';
-      itemCount.value = 0;
-      speechStopMethod();
-      update();
-    }
-
-
-    void shareChat(BuildContext context) {
-      final sharedText = shareMessagesBox.values.join("\n"); // Verwenden Sie die Hive-Box anstelle der Liste
-      debugPrint(sharedText);
-      Share.share("$sharedText\n\n --CONVERSATION END--",
-          subject: "I'm sharing Conversation with ${Strings.appName}");
-    }
-
-
-    RxInt count = 0.obs;
+  clearConversation() {
+  //  speechStopMethod();
+  //  messages.value.clear();
+  //  shareMessages.clear();
+  //  shareMessages.add('--THIS IS CONVERSATION with ${Strings.appName}--\n\n');
+  //  textInput.value = '';
+  //  itemCount.value = 0;
+    speechStopMethod();
+    update();
   }
+
+
+  void shareChat(BuildContext context) {
+    debugPrint(shareMessages.toString());
+    Share.share("${shareMessages.toString()}\n\n --CONVERSATION END--",
+        subject: "I'm sharing Conversation with ${Strings.appName}");
+
+}
+  RxInt count = 0.obs;
+}
+
 

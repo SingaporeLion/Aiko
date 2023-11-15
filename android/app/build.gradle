@@ -36,7 +36,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     compileSdkVersion 33
-        ndkVersion "25.1.8937393"
+    ndkVersion "25.1.8937393"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -95,5 +95,3 @@ dependencies {
     implementation "com.android.billingclient:billing:$billingVersion"
     implementation 'com.google.android.gms:play-services-wallet:19.2.0-beta01'
 }
-
-

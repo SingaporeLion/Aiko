@@ -1,7 +1,7 @@
 {
   "file_generated_by": "FlutterFire CLI",
   "purpose": "FirebaseAppID & ProjectID for this Firebase app in this directory",
-  "GOOGLE_APP_ID": "1:237787426480:android:263f8739e801f993b11575",
-  "FIREBASE_PROJECT_ID": "aiko-2023",
-  "GCM_SENDER_ID": "237787426480"
+  "GOOGLE_APP_ID": "1:30848946743:ios:87c3223665667b1647a5b2",
+  "FIREBASE_PROJECT_ID": "aikonia-b1c20",
+  "GCM_SENDER_ID": "30848946743"
 }

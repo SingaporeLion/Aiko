@@ -1,5 +1,4 @@
 import 'utils/config.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -25,18 +24,22 @@ void main() async {
   print("App gestartet");
   WidgetsFlutterBinding.ensureInitialized();
 
-    final appDocumentDirectory = await path_provider.getApplicationDocumentsDirectory();
-    Hive.init(appDocumentDirectory.path);
-    runApp(MyApp());
+  // Initialisiert Hive für Flutter
+  final appDocumentDir = await path_provider.getApplicationDocumentsDirectory();
+  Hive.init(appDocumentDir.path);
+  await Hive.initFlutter();
 
   await GetStorage.init();
   await AdManager.init();
   await LocalStorage.init();
 
+  // Erstellen einer Instanz von LocalStorage und Übergeben der chatBox
+  var chatBox = await Hive.openBox('chatBox');
+  var localStorage = LocalStorage(chatBox);
+
   Stripe.publishableKey = ApiConfig.stripePublishableKey;
 
   SystemChrome.setPreferredOrientations([
-    // Locking Device Orientation
     DeviceOrientation.portraitDown,
     DeviceOrientation.portraitUp,
   ]);
@@ -49,38 +52,41 @@ void main() async {
 
   appleSignInAvailable.check();
 
-  runApp(MyApp());
+  runApp(MyApp(localStorage: localStorage)); // Übergeben von localStorage an Ihre App
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final LocalStorage localStorage;
+
+  MyApp({Key? key, required this.localStorage}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
       designSize: const Size(414, 896),
       builder: (_, child) => GetMaterialApp(
-        title: Strings.appName,
+        title: Strings.appName, // Replace with your app name
         debugShowCheckedModeBanner: false,
-        theme: Themes.light,
-        darkTheme: Themes.dark,
-        themeMode: Themes().theme,
-        navigatorKey: Get.key,
-        initialRoute: Routes.welcomeScreen,
-        getPages: Pages.list,
-        translations: LocalString(),
-        locale: const Locale('en', 'US'),
+        theme: Themes.light, // Your theme data
+        darkTheme: Themes.dark, // Your dark theme data
+        themeMode: Themes().theme, // Your theme mode
+        navigatorKey: Get.key, // Your navigator key
+        initialRoute: Routes.welcomeScreen, // Your initial route
+        getPages: Pages.list, // Your pages
+        translations: LocalString(), // Your translations
+        locale: const Locale('en', 'US'), // Your locale
         builder: (context, widget) {
           ScreenUtil.init(context);
           return MediaQuery(
             data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
             child: widget!,
-          ); // Locking Device Orientation
+          );
         },
       ),
     );
   }
 }
+
 
 
 

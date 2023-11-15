@@ -31,7 +31,7 @@
     <application
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
-        android:label="AIKONIA"
+        android:label="AIKO"
         android:usesCleartextTraffic="true"
         tools:replace="android:label">
         <activity

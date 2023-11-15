@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "237787426480",
-    "project_id": "aikonia-2023",
-    "storage_bucket": "aikonia-2023.appspot.com"
+    "project_number": "30848946743",
+    "project_id": "aikonia-b1c20",
+    "storage_bucket": "aikonia-b1c20.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:237787426480:android:263f8739e801f993b11575",
+        "mobilesdk_app_id": "1:30848946743:android:fe2f13ef9eb8c2a547a5b2",
         "android_client_info": {
           "package_name": "com.tech.aiko"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDG9nWGRfd2qspokBKan3m_HGxvGsmt1iA"
+          "current_key": "AIzaSyC310ziM_B01hV8xz2K4JtH_Dd-gik-JoE"
         }
       ],
       "services": {

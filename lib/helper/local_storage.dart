@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/model/notification_model/notification_model.dart';
+import 'package:hive/hive.dart';
+
 
 const String idKey = "idKey";
 
@@ -63,15 +65,15 @@ const String selectedToken = "selectedToken";
 const String selectedModel = "selectedModel";
 const String selectedImageType = "selectedImageType";
 
-class LocalStorage {
-  static SharedPreferences? _preferences;
 
+class LocalStorage {
+  final Box chatBox;
+
+  LocalStorage(this.chatBox);
+
+  static SharedPreferences? _preferences;
   static Future init() async {
     _preferences = await SharedPreferences.getInstance();
-  }
-
-  static Future setString(String key, String value) async {
-    await _preferences?.setString(key, value);
   }
 
   static String? getString(String key) {
@@ -86,6 +88,25 @@ class LocalStorage {
     return _preferences?.getBool(key);
   }
 
+
+  static Future setString(String key, String value) async {
+    await _preferences?.setString(key, value);
+  }
+
+  // Methoden zum Speichern und Abrufen von Chat-Nachrichten
+  void storeChatMessage(String message, bool isUserMessage, DateTime timestamp) {
+    final chatMessage = {
+      'message': message,
+      'isUserMessage': isUserMessage,
+      'timestamp': timestamp.toString()
+    };
+    chatBox.add(chatMessage);
+    print('Chat-Nachricht gespeichert: $chatMessage');
+  }
+
+  List<Map<String, dynamic>> getLast90Messages() {
+    return chatBox.values.toList().take(90).map((e) => Map<String, dynamic>.from(e)).toList();
+  }
 
   static Future<void> saveLanguage({
     required String langSmall,
@@ -543,10 +564,10 @@ class LocalStorage {
   }
 
 
-
   static Future<void> saveSelectedImageType({required String value}) async {
     final box = GetStorage();
 
     await box.write(selectedImageType, value);
+
+   }
   }
-}
