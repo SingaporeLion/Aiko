@@ -13,7 +13,7 @@ import '../utils/dimensions.dart';
 import '../utils/strings.dart';
 import '../widgets/api/toast_message.dart';
 import '../widgets/app_name_widget.dart';
-import 'drawer_screen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     RxBool isDark = Get.isDarkMode.obs;
 
     return Scaffold(
-      drawer: DrawerWidget(isDark: isDark),
+
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -335,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: const Text("OK"),
       onPressed: () {
         Get.back();
-        controller.deleteAccount();
+
       },
     );
 

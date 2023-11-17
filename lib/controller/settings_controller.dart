@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-
 import '../helper/local_storage.dart';
 import '../model/ai_type_model/ai_type_model.dart';
 

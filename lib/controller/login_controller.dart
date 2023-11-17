@@ -1,6 +1,4 @@
 
-// import 'package:firebase_auth/firebase_auth.dart';
-
 import '../helper/notification_helper.dart';
 import '../widgets/api/toast_message.dart';
 import 'package:flutter/material.dart';
@@ -120,7 +118,7 @@ class LoginController extends GetxController {
   final noteController = TextEditingController();
   @override
   void onInit() {
-    NotificationHelper.initInfo();
+
     super.onInit();
   }
   @override

@@ -10,7 +10,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
 import 'helper/unity_ad.dart';
-import 'services/apple_sign_in/apple_sign_in_available.dart';
+
 import 'services/status_service_admin.dart';
 import 'helper/notification_helper.dart';
 import 'routes/pages.dart';
@@ -19,6 +19,8 @@ import 'utils/Flutter Theam/themes.dart';
 import 'utils/language/local_string.dart';
 import 'utils/strings.dart';
 import '/helper/local_storage.dart';
+import 'services/chatsession_service.dart'; // Importieren des ChatSessionService
+
 
 void main() async {
   print("App gestartet");
@@ -33,9 +35,6 @@ void main() async {
   await AdManager.init();
   await LocalStorage.init();
 
-  // Erstellen einer Instanz von LocalStorage und Übergeben der chatBox
-  var chatBox = await Hive.openBox('chatBox');
-  var localStorage = LocalStorage(chatBox);
 
   Stripe.publishableKey = ApiConfig.stripePublishableKey;
 
@@ -44,21 +43,16 @@ void main() async {
     DeviceOrientation.portraitUp,
   ]);
 
-  NotificationHelper.initialization();
-  NotificationHelper.requestPermission();
-  NotificationHelper.getBackgroundNotification();
 
   StatusService.init();
 
-  appleSignInAvailable.check();
 
-  runApp(MyApp(localStorage: localStorage)); // Übergeben von localStorage an Ihre App
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final LocalStorage localStorage;
-
-  MyApp({Key? key, required this.localStorage}) : super(key: key);
+  MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

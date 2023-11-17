@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -67,9 +67,6 @@ const String selectedImageType = "selectedImageType";
 
 
 class LocalStorage {
-  final Box chatBox;
-
-  LocalStorage(this.chatBox);
 
   static SharedPreferences? _preferences;
   static Future init() async {
@@ -93,20 +90,6 @@ class LocalStorage {
     await _preferences?.setString(key, value);
   }
 
-  // Methoden zum Speichern und Abrufen von Chat-Nachrichten
-  void storeChatMessage(String message, bool isUserMessage, DateTime timestamp) {
-    final chatMessage = {
-      'message': message,
-      'isUserMessage': isUserMessage,
-      'timestamp': timestamp.toString()
-    };
-    chatBox.add(chatMessage);
-    print('Chat-Nachricht gespeichert: $chatMessage');
-  }
-
-  List<Map<String, dynamic>> getLast90Messages() {
-    return chatBox.values.toList().take(90).map((e) => Map<String, dynamic>.from(e)).toList();
-  }
 
   static Future<void> saveLanguage({
     required String langSmall,
@@ -508,8 +491,7 @@ class LocalStorage {
   }
 
   static Future<void> logout() async {
-    final FirebaseAuth auth = FirebaseAuth.instance; // firebase instance/object
-    auth.signOut();
+
 
     final box = GetStorage();
 

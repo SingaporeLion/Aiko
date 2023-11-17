@@ -18,13 +18,13 @@ import 'package:geocoding/geocoding.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:math';
-import 'package:hive/hive.dart';
-
+import '/services/chatsession_service.dart'; // Aktualisieren Sie den Pfad entsprechend
 
 
 
 class ChatController extends GetxController {
-  late Box _chatBox;  // Deklaration der Box-Variable
+  late ChatContextManager chatContextManager; // Deklaration des ChatSessionService
+  // Entfernen der Box-Variable, da ChatSessionService verwendet wird
   String? userName;   // Initialwert ist null
   int? userAge;       // Initialwert ist null
   String? userGender; // Initialwert ist null
@@ -136,26 +136,6 @@ class ChatController extends GetxController {
   final String googleSearchAPIURL = 'https://www.googleapis.com/customsearch/v1?key=YOUR_API_KEY&cx=96f7a0294adec4a92&q=YOUR_SEARCH_QUERY';
   final String googleAPIKey = 'AIzaSyAU3J4y31RKcY7cCkXagS9OoLk1WUiv5yU';
   final String googleSearchEngineID = '96f7a0294adec4a92';
-
-  Future<String> askChatGPT(String userMessage) async {
-    print("askChatGPT aufgerufen mit Nachricht: $userMessage");
-    var url = Uri.parse(chatGPTAPIURL);  // Die URL zur OpenAI API
-    var body = {
-      "model": "ft:gpt-3.5-turbo-1106:personal::8JRC1Idj",
-      "messages": [{"role": "user", "content": userMessage}]
-    };
-    var headers = {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer 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"  // Ersetzen Sie dies durch Ihren tatsächlichen API-Schlüssel
-    };
-    var response = await http.post(url, body: json.encode(body), headers: headers);
-    if (response.statusCode == 200) {
-      var jsonResponse = json.decode(response.body);
-      return jsonResponse['choices'][0]['message']['content'];
-    } else {
-      throw Exception('Oops! Ich habe gerade ein kleines Problem. Kannst du es später noch einmal versuchen?');
-    }
-  }
 
 
   Future<List<String>> searchGoogle(String query) async {
@@ -991,11 +971,17 @@ class ChatController extends GetxController {
   }
 
   @override
-  void onInit() async {
+  void onInit() {
     super.onInit();
-    await _initHive();  // Hive-Initialisierung
+    chatContextManager = ChatContextManager();
 
-    loadUserData();  // Lädt die Benutzerdaten aus dem Speicher
+    // Lädt die Benutzerdaten aus einer Quelle wie SharedPreferences oder GetStorage
+    loadUserData(); // Diese Methode sollten Sie basierend auf Ihren Anforderungen definieren
+
+    // Setzen der Benutzerdaten im ChatContextManager
+    if (userName != null && userAge != null && userGender != null) {
+      chatContextManager.setInitialContext(userName!, userAge!, userGender!);
+    }
 
     _determineLocation().then((state) {
       if (state != null) {
@@ -1007,74 +993,21 @@ class ChatController extends GetxController {
         _introduceUserToAI();  // Stellt den Benutzer der KI vor
       }
 
-      NotificationHelper.initInfo();
+
       speech = stt.SpeechToText();
 
       count.value = LocalStorage.getTextCount();
     });
   }
 
-  Future<void> _initHive() async {
-    _chatBox = await Hive.openBox(_boxName);  // Verwendung von _boxName
-  }
 
-  Future<void> saveMessage(String message) async {
-    await _chatBox.add(message);
-    while (_chatBox.length > 90) {
-      await _chatBox.deleteAt(0);  // Löscht die älteste Nachricht
-    }
-  }
-
-  List<String> getMessages() {
-    var allMessages = _chatBox.values.cast<String>().toList();
-    // Rückgabe der letzten 90 Nachrichten
-    return allMessages.length > 90 ? allMessages.sublist(allMessages.length - 90) : allMessages;
-  }
 
   Future<void> sendMessage(String message) async {
-    await saveMessage(message);  // Speichern der neuen Nachricht in Hive
-    List<String> lastMessages = getMessages();  // Abrufen der letzten 90 Nachrichten
-
-    if (isFirstSession) {
-      // Senden der Benutzerdaten zusammen mit der ersten Nachricht und den letzten 90 Nachrichten
-      _sendToChatGPTAPI(userName, userAge, userGender, message, lastMessages);
-      isFirstSession = true; // Zurücksetzen der Variable
-    } else {
-      // Senden der Nachricht ohne Benutzerdaten, aber mit den letzten 90 Nachrichten
-      _sendToChatGPTAPI(null, null, null, message, lastMessages);
-    }
+    chatContextManager.addMessage("user", message);
+    String response = await chatContextManager.sendMessageToAPI(message);
+    _addBotResponse(response);
   }
 
-
-  void _sendToChatGPTAPI(String? userName, int? userAge, String? userGender, String message, List<String> lastMessages) async {
-
-    var url = Uri.parse('Ihre-ChatGPT-API-URL');
-    var headers = {
-      'Content-Type': 'application/json',
-      "Authorization": "Bearer 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"
-    };
-    var body = json.encode({
-      'userName': userName,
-      'userAge': userAge,
-      'userGender': userGender,
-      'message': message,
-      'lastMessages': lastMessages  // Senden der letzten 90 Nachrichten
-    });
-
-    try {
-      var response = await http.post(url, headers: headers, body: body);
-      if (response.statusCode == 200) {
-        var responseData = json.decode(response.body);
-        // Verarbeiten Sie hier die Antwort
-      } else {
-        // Fehlerbehandlung
-        print('Fehler beim Senden der Anfrage: ${response.statusCode}');
-      }
-    } catch (e) {
-      // Netzwerk- oder andere Fehler
-      print('Ausnahme beim Senden der Anfrage: $e');
-    }
-  }
 
   loc.Location location = new loc.Location();
 
@@ -1419,13 +1352,13 @@ class ChatController extends GetxController {
   }
 
 
-  void shareChat(BuildContext context) {
-    debugPrint(shareMessages.toString());
-    Share.share("${shareMessages.toString()}\n\n --CONVERSATION END--",
-        subject: "I'm sharing Conversation with ${Strings.appName}");
-
+void shareChat(BuildContext context) {
+  debugPrint(shareMessages.toString());
+  Share.share("${shareMessages.toString()}\n\n --CONVERSATION END--",
+      subject: "I'm sharing Conversation with ${Strings.appName}");
 }
   RxInt count = 0.obs;
 }
+
 
 

@@ -68,13 +68,6 @@ class ImageScreen extends StatelessWidget {
                         imageText: _imageTextController.text.trim(),
                       );
 
-                      debugPrint((_imageController.count.value % 2 ==0).toString());
-                      if(_imageController.count.value % 2 ==0){
-                        debugPrint("1");
-                        AdManager.showIntAd();
-                      }else{
-                        debugPrint("2");
-                      }
 
                       Get.snackbar('Generated', "Please wait for load image");
                     } else {

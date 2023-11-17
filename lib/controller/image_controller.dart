@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -45,9 +44,7 @@ class ImageController extends GetxController {
 
   Future getImage({required String imageText}) async {
     try {
-      debugPrint("---------${count.value.toString()}-----------");
-      debugPrint("---------${count.value.toString()}-----------");
-      debugPrint("---------${count.value.toString()}-----------");
+
 
       _isVisible.value = true;
       _isLoading.value = true;
@@ -68,7 +65,7 @@ class ImageController extends GetxController {
       // print(request.statusCode);
 
       if (request.statusCode == 200) {
-        addCountImage();
+
         _imageModel = ImageModel.fromJson(jsonDecode(request.body));
         _isLoading.value = false;
       } else {
@@ -138,8 +135,8 @@ class ImageController extends GetxController {
 
   @override
   void onInit() {
-    NotificationHelper.initInfo();
-    count.value = LocalStorage.getImageCount();
+
+
     super.onInit();
 
 
@@ -148,18 +145,5 @@ class ImageController extends GetxController {
       // await AdManager.loadUnityRewardedAd();
     });
 
-  }
-
-  final FirebaseAuth _auth = FirebaseAuth.instance; // firebase instance/object
-  User get user => _auth.currentUser!;
-  RxInt count = 0.obs;
-
-  //count.value = LocalStorage.getTextCount();
-  addCountImage() async {
-    count.value++;
-
-    if(LocalStorage.isLoggedIn()) {
-      MainController.updateImageGenCount(count.value);
-    }
   }
 }

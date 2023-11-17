@@ -15,7 +15,7 @@ import '../views/pdf_view_screen.dart';
 import '../widgets/api/toast_message.dart';
 
 import 'package:http/http.dart' as http;
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+
 
 
 class DietChartController extends GetxController {
@@ -78,7 +78,7 @@ class DietChartController extends GetxController {
           dietDurationController.text.isNotEmpty) {
         // Perform form processing here
 
-        debugPrint("========>Test print of data #sayem<==========");
+
 
         debugPrint(
             "current weight: ${currentWeightController.text}, target weight: ${targetWeightController.text} , height: ${heightController.text}, diet Duration: ${dietDurationController.text} , Gender: ${selectedGender.value}, LifeStyle: ${selectedLifeStyle.value} ");
@@ -100,7 +100,7 @@ class DietChartController extends GetxController {
 
     var input =
         "${Strings.createDietChart.tr} ${Strings.nowWeight.tr}  ${currentWeightController.text} ${Strings.kg.tr} ${Strings.expectedWeight.tr} ${targetWeightController.text} ${Strings.kg.tr} ${Strings.heightIs.tr} ${heightController.text} ${Strings.cm.tr}  ${Strings.myDietDuration.tr} ${dietDurationController.text} ${Strings.weeks.tr} ${Strings.iAmA.tr}  ${selectedGender.value ?? 'Male'} ${Strings.myLifestyle.tr}   ${selectedLifeStyle.value ?? 'Sedentary'}  ${Strings.basedOn.tr} ${countryController.text} ${Strings.food.tr}  ";
-    debugPrint("printing the input in the controller");
+
     debugPrint(input);
 
 
@@ -117,10 +117,10 @@ class DietChartController extends GetxController {
       textResponse.value = "";
       isLoading.value = true;
       update();
-      debugPrint("---------------Content Response------------------");
+
       debugPrint("RECEIVED");
 
-      debugPrint("=========> printing response of chat gpt<=========");
+
       debugPrint(value);
       textResponse.value = value.replaceAll("#", "\n#");
       update();
@@ -156,9 +156,8 @@ class DietChartController extends GetxController {
 
 
     // Upload PDF to Firebase Storage
-    String downloadUrl = await uploadInFirebase(Uint8List.fromList(pdfBytes));
-    debugPrint("========>Download Url<==========");
-    debugPrint(downloadUrl);
+
+
     isLoading.value = false;
     Get.to(PdfViewScreen(pdfBytes: pdfBytes.toList()));
     //clear the data from the field
@@ -180,20 +179,7 @@ class DietChartController extends GetxController {
 
 
   }
-  Future<String> uploadInFirebase(Uint8List pdfBytes) async {
-    final String fileName = '${DateTime.now().millisecondsSinceEpoch}.pdf';
-    //kept the file name in global variable pdfFilename
-    pdfFileName = fileName;
-    final firebase_storage.Reference dietChartPdf =
-    firebase_storage.FirebaseStorage.instance.ref('dietChartPdf/$fileName');
 
-    await dietChartPdf.putData(pdfBytes);
-
-    final String downloadUrl = await dietChartPdf.getDownloadURL();
-    debugPrint(downloadUrl);
-    firebaseUrl = downloadUrl;
-    return downloadUrl;
-  }
 
 
   clearConversation() {
