@@ -42,7 +42,7 @@ class ChatContextManager {
     var url = Uri.parse('https://api.openai.com/v1/chat/completions');
     var headers = {
       'Content-Type': 'application/json',
-      "Authorization": "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"
+      "Authorization": "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"
     };
     var body = json.encode({"model": "ft:gpt-3.5-turbo-1106:personal::8JRC1Idj", "messages": messages});
 

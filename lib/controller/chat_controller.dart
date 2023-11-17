@@ -974,13 +974,17 @@ class ChatController extends GetxController {
   void onInit() {
     super.onInit();
     chatContextManager = ChatContextManager();
-
-    // Lädt die Benutzerdaten aus einer Quelle wie SharedPreferences oder GetStorage
-    loadUserData(); // Diese Methode sollten Sie basierend auf Ihren Anforderungen definieren
+    loadUserData(); // Laden der Benutzerdaten
 
     // Setzen der Benutzerdaten im ChatContextManager
     if (userName != null && userAge != null && userGender != null) {
       chatContextManager.setInitialContext(userName!, userAge!, userGender!);
+    }
+
+    // Begrüßung nur beim ersten Mal
+    if (isFirstSession && userName != 'Freund' && userAge != 0 && userGender != 'unbekannt') {
+      _introduceUserToAI();
+      isFirstSession = false; // Setzen Sie dies auf false nach der ersten Begrüßung
     }
 
     _determineLocation().then((state) {
@@ -989,13 +993,8 @@ class ChatController extends GetxController {
         _informAIAboutLocation(state);
       }
 
-      if (userName != 'Freund' && userAge != 0 && userGender != 'unbekannt') {
-        _introduceUserToAI();  // Stellt den Benutzer der KI vor
-      }
-
-
+      // Weitere Logik...
       speech = stt.SpeechToText();
-
       count.value = LocalStorage.getTextCount();
     });
   }
