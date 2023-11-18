@@ -107,30 +107,30 @@ class DietChartController extends GetxController {
 
     update();
 
-    _apiProcess(input, context);
+    // _apiProcess(input, context);
 
-    update();
+    //update();
   }
 
-  _apiProcess(String input, context) async {
-    await ApiServices.generateResponse2([{"role": "user", "content": input}]).then((value) {
-      textResponse.value = "";
-      isLoading.value = true;
-      update();
+  //_apiProcess(String input, context) async {
+  //  await ApiServices.generateResponse2([{"role": "user", "content": input}]).then((value) {
+  //    textResponse.value = "";
+  //    isLoading.value = true;
+  //    update();
+//
+  //    debugPrint("RECEIVED");
 
-      debugPrint("RECEIVED");
 
+  //  debugPrint(value);
+  //  textResponse.value = value.replaceAll("#", "\n#");
+  //  update();
+  //  debugPrint("---------------END------------------");
 
-      debugPrint(value);
-      textResponse.value = value.replaceAll("#", "\n#");
-      update();
-      debugPrint("---------------END------------------");
+  //  count.value ++;
 
-      count.value ++;
-
-       generatePdf(context, response: textResponse.value);
-    });
-  }
+//   generatePdf(context, response: textResponse.value);
+//  });
+  //}
 
   Future<void> generatePdf(context, {required String response}) async {
     isLoading.value = true;

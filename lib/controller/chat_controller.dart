@@ -19,10 +19,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:math';
 import '/services/chatsession_service.dart'; // Aktualisieren Sie den Pfad entsprechend
-
-
+import 'package:hive/hive.dart';
+import 'dart:convert';
 
 class ChatController extends GetxController {
+
   late ChatContextManager chatContextManager; // Deklaration des ChatSessionService
   // Entfernen der Box-Variable, da ChatSessionService verwendet wird
   String? userName;   // Initialwert ist null
@@ -32,6 +33,7 @@ class ChatController extends GetxController {
   bool isFirstSession = true;  // Hinzugefügte Variable für die erste Session
   bool isFirstRequest = true;
   static const String _boxName = "chatMessages";  // Name der Hive-Box
+
 
 
   List<String> schimpfwoerter = [
@@ -136,6 +138,7 @@ class ChatController extends GetxController {
   final String googleSearchAPIURL = 'https://www.googleapis.com/customsearch/v1?key=YOUR_API_KEY&cx=96f7a0294adec4a92&q=YOUR_SEARCH_QUERY';
   final String googleAPIKey = 'AIzaSyAU3J4y31RKcY7cCkXagS9OoLk1WUiv5yU';
   final String googleSearchEngineID = '96f7a0294adec4a92';
+
 
 
   Future<List<String>> searchGoogle(String query) async {
@@ -960,10 +963,10 @@ class ChatController extends GetxController {
   }
 
 
-  void loadUserData() async {
+  Future<void> loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     userName = prefs.getString('userName') ?? 'Freund';
-    userAge = prefs.getInt('userAge') ?? 0;  // Hier wird das Alter als int abgerufen
+    userAge = prefs.getInt('userAge') ?? 0;
     userGender = prefs.getString('userGender') ?? 'unbekannt';
     print("Geladener Benutzername: $userName");
     print("Geladenes Alter: $userAge");
@@ -971,14 +974,22 @@ class ChatController extends GetxController {
   }
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
     chatContextManager = ChatContextManager();
-    loadUserData(); // Laden der Benutzerdaten
+
+    // Laden der Benutzerdaten
+    await loadUserData();
 
     // Setzen der Benutzerdaten im ChatContextManager
     if (userName != null && userAge != null && userGender != null) {
       chatContextManager.setInitialContext(userName!, userAge!, userGender!);
+    }
+
+    // Bestimmen des Standorts und Anzeigen der Systemnachricht
+    String? state = await _determineLocation();
+    if (state != null) {
+      _informAIAboutLocation(state);
     }
 
     // Begrüßung nur beim ersten Mal
@@ -987,26 +998,43 @@ class ChatController extends GetxController {
       isFirstSession = false; // Setzen Sie dies auf false nach der ersten Begrüßung
     }
 
-    _determineLocation().then((state) {
-      if (state != null) {
-        // Informieren Sie die KI über den Standort des Benutzers
-        _informAIAboutLocation(state);
-      }
-
       // Weitere Logik...
       speech = stt.SpeechToText();
       count.value = LocalStorage.getTextCount();
-    });
   }
-
+// Methode zum Abrufen der letzten 90 Nachrichten aus Hive
+  Future<List<ChatMessage>> getLastMessages() async {
+    var box = await Hive.openBox<ChatMessage>(_boxName);
+    return box.values.toList().reversed.take(90).toList().reversed.toList();
+  }
 
 
   Future<void> sendMessage(String message) async {
-    chatContextManager.addMessage("user", message);
-    String response = await chatContextManager.sendMessageToAPI(message);
-    _addBotResponse(response);
-  }
+    var box = await Hive.openBox<ChatMessage>('chatMessages');
+    var userMessage = ChatMessage(
+      text: message,
+      chatMessageType: ChatMessageType.user,
+    );
+    box.add(userMessage); // Speichern der Nutzernachricht in Hive
 
+    // Abrufen der letzten 90 Nachrichten aus der Hive-Datenbank
+    List<ChatMessage> lastMessages = box.values.toList().reversed.take(90).toList().reversed.toList();
+
+    // Konvertieren der Nachrichten in das erforderliche Format
+    List<Map<String, dynamic>> messagesList = lastMessages.map((msg) => {
+      "role": msg.chatMessageType == ChatMessageType.user ? "user" : "bot",
+      "content": msg.text ?? ""
+    }).toList();
+
+    // Fügen Sie die aktuelle Nachricht der Liste hinzu
+    messagesList.add({"role": "user", "content": message});
+
+    // Senden der Nachrichtenliste an die API
+    String response = await chatContextManager.sendMessageToAPI(messagesList);
+    _addBotResponse(response);
+
+    await box.close(); // Schließen der Hive-Box
+  }
 
   loc.Location location = new loc.Location();
 
@@ -1094,12 +1122,11 @@ class ChatController extends GetxController {
   }
 
   void _introduceUserToAI() async {
-    String introductionMessage = "Dies ist ${getUserName()}, ein ${getUserAge()} Jahre altes ${getUserGender()}.";
-    // Senden Sie die Einführungsnachricht an die KI
-    _apiProcess(introductionMessage);
-    // Optional: Sie können die Antwort der KI ignorieren oder sie ebenfalls im Hintergrund verarbeiten.
+    if (userName != null && userAge != null && userGender != null) {
+      String introductionMessage = "Dies ist $userName, ein $userAge Jahre altes $userGender.";
+      _apiProcess(introductionMessage);
+    }
   }
-
   String getUserName() {
     return GetStorage().read('userName') ?? 'Freund';
   }
@@ -1180,46 +1207,50 @@ class ChatController extends GetxController {
     update();
   }
 
-  void _apiProcess(String input) {
+  void _apiProcess(String input) async {
     print("_apiProcess aufgerufen mit Eingabe: $input");
-    // Fügen Sie die temporäre Nachricht (Text + Emoji) hinzu
+
+    // Temporäre Nachricht für die Ladeanzeige hinzufügen
     messages.value.add(
       ChatMessage(
-        widget: waitingResponseWidget(),
+        text: "Lade...", // Text für die Ladeanzeige
         chatMessageType: ChatMessageType.bot,
+        isTemporary: true,
       ),
     );
-    isLoading.value = true;  // Starten Sie die 3-Punkte-Animation
+    isLoading.value = true;
     update();
 
     String content;
     if (isFirstRequest) {
       content = "Ich bin $userName, ein $userAge Jahre altes $userGender. $input";
-      isFirstRequest = true; // Setzen Sie dies auf false nach dem ersten Request
+      isFirstRequest = false; // Setzen Sie dies auf false nach dem ersten Request
     } else {
       content = input;
     }
 
-    List<Map<String, dynamic>> messageslist = [
-      {
-        "role": "user",
-        "content": content
-      }
-    ];
+    // Hier müssten Sie die Logik implementieren, um die letzten Nachrichten aus Hive abzurufen
+    // und sie zusammen mit der aktuellen Nachricht zu senden.
+    // Zum Beispiel:
+    List<ChatMessage> lastMessages = await getLastMessages();
+    List<Map<String, String?>> messagesList = lastMessages.map((msg) => {
+      "role": msg.chatMessageType == ChatMessageType.user ? "user" : "bot",
+      "content": msg.text
+    }).toList();
 
-    ApiServices.generateResponse2(messageslist).then((response) {
+    // Fügen Sie die aktuelle Nachricht der Liste hinzu
+    messagesList.add({"role": "user", "content": content});
 
-      // Überprüfen Sie, ob der Wert null oder leer ist
-      if (response == null || response.trim().isEmpty) {
-        debugPrint("API Response is null or empty");
-        isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
-        return; // Beenden Sie die Methode, wenn der Wert null oder leer ist
-      }
-
+    // Senden Sie diese Nachrichtenliste an Ihre API
+    // Beispiel:
+    try {
+      String response = await ApiServices.generateResponse2(messagesList);
       _addBotResponse(response);
-    });
+    } catch (e) {
+      // Fehlerbehandlung hier
+      print('Error in _apiProcess: $e');
+    }
   }
-
   void _addBotResponse(String response) {
     isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
     debugPrint("---------------Chat Response------------------");
@@ -1228,16 +1259,20 @@ class ChatController extends GetxController {
     debugPrint("---------------END------------------");
 
     // Sobald die Antwort der KI eintrifft:
-    // Entfernen Sie die temporäre Nachricht
-    messages.value.removeLast();
+    // Finden und Entfernen der spezifischen temporären Nachricht
+    int tempMsgIndex = messages.value.indexWhere((msg) => msg.isTemporary);
+    if (tempMsgIndex != -1) {
+      messages.value.removeAt(tempMsgIndex);
+    }
 
-    // Fügen Sie die KI-Antwort hinzu
+    // Hinzufügen der KI-Antwort
     messages.value.add(
       ChatMessage(
         text: response.replaceFirst("\n", " ").replaceFirst("\n", " "),
         chatMessageType: ChatMessageType.bot,
       ),
     );
+
     update();  // Aktualisieren Sie den Zustand
 
     shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");

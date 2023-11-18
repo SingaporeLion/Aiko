@@ -22,6 +22,7 @@ import '/helper/local_storage.dart';
 import 'services/chatsession_service.dart'; // Importieren des ChatSessionService
 
 
+
 void main() async {
   print("App gestartet");
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,8 +30,8 @@ void main() async {
   // Initialisiert Hive für Flutter
   final appDocumentDir = await path_provider.getApplicationDocumentsDirectory();
   Hive.init(appDocumentDir.path);
-  await Hive.initFlutter();
 
+  await Hive.initFlutter();
   await GetStorage.init();
   await AdManager.init();
   await LocalStorage.init();
