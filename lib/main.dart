@@ -20,12 +20,17 @@ import 'utils/language/local_string.dart';
 import 'utils/strings.dart';
 import '/helper/local_storage.dart';
 import 'services/chatsession_service.dart'; // Importieren des ChatSessionService
-
+import 'package:logging/logging.dart';
 
 
 void main() async {
   print("App gestartet");
   WidgetsFlutterBinding.ensureInitialized();
+
+  Logger.root.level = Level.ALL;
+  Logger.root.onRecord.listen((record) {
+    print('${record.level.name}: ${record.time}: ${record.message}');
+  });
 
   // Initialisiert Hive für Flutter
   final appDocumentDir = await path_provider.getApplicationDocumentsDirectory();

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 
 class ApiServices {
-  static const String _apiKey = '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'; // API-Schlüssel
+  static const String _apiKey = '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'; // API-Schlüssel
 
   static Future<String> generateResponse2(List<Map<String, dynamic>> messages) async {
     var url = Uri.https("api.openai.com", "/v1/chat/completions");

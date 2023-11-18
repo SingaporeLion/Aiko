@@ -1,7 +1,9 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:logging/logging.dart';
 
 class ChatContextManager {
+  final Logger _logger = Logger('ChatContextManager');
   List<Map<String, dynamic>> messages = [];
   String? userName;
   int? userAge;
@@ -18,12 +20,12 @@ class ChatContextManager {
   }
 
   Future<String> sendMessageToAPI(List<Map<String, dynamic>> messagesList) async {
-    var response = await http.post(
-      Uri.parse(apiURL),
-      headers: {
-        'Content-Type': 'application/json',
-        // Fügen Sie hier weitere erforderliche Header hinzu
-      },
+    // Logging der gesendeten Nachrichten
+    print('Sending messages to API: ${jsonEncode(messagesList)}');
+
+    var response = await http.post(Uri.parse(apiURL), headers: {
+      'Content-Type': 'application/json',
+    },
       body: jsonEncode({
         'messages': messagesList, // Senden der Nachrichtenliste als JSON
         'userName': userName,

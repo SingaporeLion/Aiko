@@ -21,10 +21,12 @@ import 'dart:math';
 import '/services/chatsession_service.dart'; // Aktualisieren Sie den Pfad entsprechend
 import 'package:hive/hive.dart';
 import 'dart:convert';
+import 'package:logging/logging.dart';
 
 class ChatController extends GetxController {
 
   late ChatContextManager chatContextManager; // Deklaration des ChatSessionService
+  final Logger _logger = Logger('ChatController');
   // Entfernen der Box-Variable, da ChatSessionService verwendet wird
   String? userName;   // Initialwert ist null
   int? userAge;       // Initialwert ist null
@@ -971,6 +973,7 @@ class ChatController extends GetxController {
     print("Geladener Benutzername: $userName");
     print("Geladenes Alter: $userAge");
     print("Geladenes Geschlecht: $userGender");
+
   }
 
   @override
@@ -1005,7 +1008,9 @@ class ChatController extends GetxController {
 // Methode zum Abrufen der letzten 90 Nachrichten aus Hive
   Future<List<ChatMessage>> getLastMessages() async {
     var box = await Hive.openBox<ChatMessage>(_boxName);
-    return box.values.toList().reversed.take(90).toList().reversed.toList();
+    var lastMessages = box.values.toList().reversed.take(90).toList().reversed.toList();
+    _logger.info("Last 90 messages retrieved from Hive.");
+    return lastMessages;
   }
 
 
@@ -1015,10 +1020,12 @@ class ChatController extends GetxController {
       text: message,
       chatMessageType: ChatMessageType.user,
     );
-    box.add(userMessage); // Speichern der Nutzernachricht in Hive
+    await box.add(userMessage); // Speichern der Nutzernachricht in Hive
+    print('User message saved in Hive: $message');
 
     // Abrufen der letzten 90 Nachrichten aus der Hive-Datenbank
     List<ChatMessage> lastMessages = box.values.toList().reversed.take(90).toList().reversed.toList();
+    print('Last 90 messages retrieved from Hive.');
 
     // Konvertieren der Nachrichten in das erforderliche Format
     List<Map<String, dynamic>> messagesList = lastMessages.map((msg) => {
@@ -1028,10 +1035,17 @@ class ChatController extends GetxController {
 
     // Fügen Sie die aktuelle Nachricht der Liste hinzu
     messagesList.add({"role": "user", "content": message});
+// Logging der Nachrichten, die an die API gesendet werden
+    print('Sending following messages to API: ${jsonEncode(messagesList)}');
 
-    // Senden der Nachrichtenliste an die API
-    String response = await chatContextManager.sendMessageToAPI(messagesList);
-    _addBotResponse(response);
+    try {
+      // Senden der Nachrichtenliste an die API
+      String response = await chatContextManager.sendMessageToAPI(messagesList);
+      _addBotResponse(response);
+      print('Response received from API: $response');
+    } catch (e) {
+      print('Error in sendMessage: $e');
+    }
 
     await box.close(); // Schließen der Hive-Box
   }
