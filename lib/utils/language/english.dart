@@ -18,16 +18,16 @@ class English {
   static const String limitedChatting = "Limited Chatte Mit Lynn";
   static const String limitedCImage = "Limited Image Generate";
   static String basicChatting = "${ApiConfig.freeMessageLimit.toString()} Chatte mit Lynn";
-  static String basicImage = "${ApiConfig.freeImageGenLimit.toString()} Image Generate";
-  static String unlimitedChatting = "${ApiConfig.premiumMessageLimit.toString()}  Chatting Mit Lynn";
-  static String unlimitedImage = "${ApiConfig.premiumImageGenLimit.toString()} Image Generate";
+  static String basicImage = "${ApiConfig.freeImageGenLimit.toString()} Dein Tagebuch";
+  static String unlimitedChatting = "${ApiConfig.premiumMessageLimit.toString()}  Chatte mit Lynn";
+  static String unlimitedImage = "${ApiConfig.premiumImageGenLimit.toString()} Dein Tagebuch";
   static const String freeSupport = "Free Support";
   static const String premiumSubscription = "Premium Subscription";
   static const String google = "Sign In with Google";
   static const String continueAsGuest = "Continue as Guest";
   static const String searchSomething = "Search Something";
 
-  static const String generateAnyImage = "Image Generate";
+  static const String generateAnyImage = "Dein Tagebuch";
   static const String generateAnyImageSubTitle =
       "Image generation in AI refers to the process of creating new images using artificial intelligence algorithms.";
   static const String typeYour = "Type your message...";
@@ -41,8 +41,6 @@ class English {
   static const String hello = "Hey";
 
   static const String english = "English";
-  static const String arabic = "Arabic";
-  static const String spanish = "Spanish";
 
   static const String download = "Download";
   static const String share = "Share";
@@ -65,9 +63,6 @@ class English {
   static const String deleteAccount = "Delete Account";
   static const String deleteYourAccount = "Do you want to Delete your Account?";
   static const String alert = "Alert!";
-
-  static const String bengali = "Bengali";
-  static const String hindi = "Hindi";
 
   static const String purchaseDetails = "Purchase Details";
   static const String statusSettings = "Status Settings";
@@ -138,7 +133,7 @@ class English {
       "Generate your hashTags with AIKONIA now for your Social Media·";
 
 
-  static const String dietChartCreating = "Diet chart Generate";
+  static const String dietChartCreating = "Dein Tagebuch";
   static const String dietChartCreatorSubTitle = "Generate your diet chart with AIKONIA now for healthy life·";
   static const String currentWeight = "Current weight in (kg)";
   static const String targetWeight = "Target weight in (kg)";

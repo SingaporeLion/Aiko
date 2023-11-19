@@ -20,26 +20,32 @@ class ChatContextManager {
   }
 
   Future<String> sendMessageToAPI(List<Map<String, dynamic>> messagesList) async {
-    // Logging der gesendeten Nachrichten
-    print('Sending messages to API: ${jsonEncode(messagesList)}');
+    String apiKey = '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';
 
-    var response = await http.post(Uri.parse(apiURL), headers: {
-      'Content-Type': 'application/json',
-    },
-      body: jsonEncode({
-        'messages': messagesList, // Senden der Nachrichtenliste als JSON
-        'userName': userName,
-        'userAge': userAge,
-        'userGender': userGender,
-        // Fügen Sie hier ggf. weitere erforderliche Daten hinzu
-      }),
-    );
+    try {
+      var response = await http.post(
+        Uri.parse(apiURL),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'ft:gpt-3.5-turbo-1106:personal::8JRC1Idj', // Ersetzen Sie dies durch Ihr gewähltes Modell
+          'messages': messagesList,
+        }),
+      );
 
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      return data['response']; // Extrahieren Sie die Antwort aus der API-Antwort
-    } else {
-      throw Exception('Fehler beim Senden der Nachrichten an die API');
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        return data['response'] ?? 'Keine Antwort von der API';
+      } else {
+        print('Fehler beim API-Aufruf: ${response.statusCode}');
+        print('Antwort: ${response.body}');
+        return 'Fehler beim Senden der Nachrichten an die API: ${response.body}'; // Gibt die genaue Fehlermeldung zurück
+      }
+    } catch (e) {
+      print('Exception in sendMessageToAPI: $e');
+      return 'Exception beim Senden der Nachrichten an die API: $e'; // Gibt die genaue Exception zurück
     }
   }
 

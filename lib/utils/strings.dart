@@ -35,7 +35,7 @@ class Strings {
       "Image generation in AI refers to the process of creating new images using artificial intelligence algorithms.";
 
 
-  static const String typeYour = "Type your message...";
+  static const String typeYour = "Gib hier deine Nachricht ein...";
 
   static const String writeSomething = "Write Something";
   static const String perMonth = "Per\nMonth";
@@ -43,12 +43,10 @@ class Strings {
   static const String regenerateResponse = "Regenerate Response";
   static const String regeneratingResponse = "Regenerating Response..";
   static const String clearConversation = "Clear Conversation";
-  static const String hello = "Hello";
-  static const String helloGuest = "Hello Guest";
+  static const String hello = "Sei gegrüßt";
+  static const String helloGuest = "Sei gegrüßt lieber Gast";
 
   static const String english = "English";
-  static const String arabic = "Arabic";
-  static const String spanish = "Spanish";
 
   static const String download = "Download";
   static const String share = "Share";
@@ -71,8 +69,6 @@ class Strings {
   static const String deleteYourAccount = "Do you want to Delete your Account?";
   static const String alert = "Alert!";
 
-  static const String bengali = "Bengali";
-  static const String hindi = "Hindi";
 
   static const String purchaseDetails = "Purchase Details";
   static const String statusSettings = "Status Settings";
@@ -139,7 +135,7 @@ class Strings {
 
 //from here to //end  copy the code and pest it exactly in your code in this order (version 3.7.0)
 
-  static const String dietChartCreating = "Diet chart Generate";
+  static const String dietChartCreating = "Dein Tagebuch";
   static const String dietChartCreatorSubTitle = "Generate your diet chart with AIKONIA now for healthy life·";
   static const String currentWeight = "Current weight in (kg)";
   static const String targetWeight = "Target weight in (kg)";

@@ -8,27 +8,26 @@ class ChatMessage extends HiveObject {
   @HiveField(0)
   final String? text;
 
+  // Speichern des Enum-Werts als String
   @HiveField(1)
-  final ChatMessageType chatMessageType;
+  final String chatMessageTypeString;
 
   @HiveField(2)
   final bool isTemporary;
 
-  // Optional: Wenn Sie Informationen über das Widget speichern müssen,
-  // verwenden Sie stattdessen einen Enum oder String
-  // @HiveField(3)
-  // final String widgetType;
+  ChatMessageType get chatMessageType => ChatMessageType.values.firstWhere(
+        (e) => e.toString() == 'ChatMessageType.$chatMessageTypeString',
+    orElse: () => ChatMessageType.user, // Setzen Sie Ihren Standard-Enum-Wert hier
+  );
 
   ChatMessage({
     this.text,
-    required this.chatMessageType,
+    required ChatMessageType chatMessageType,
     this.isTemporary = false,
-  });
+  }) : chatMessageTypeString = chatMessageType.toString().split('.').last;
 }
 
 enum ChatMessageType {
-  @HiveField(0)
   user,
-  @HiveField(1)
   bot
 }

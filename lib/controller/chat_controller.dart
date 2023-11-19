@@ -36,7 +36,12 @@ class ChatController extends GetxController {
   bool isFirstRequest = true;
   static const String _boxName = "chatMessages";  // Name der Hive-Box
 
-
+  //Future<void> clearHiveStorage() async {
+  //var box = await Hive.openBox<ChatMessage>('chatMessages');
+  //await box.clear(); // Löscht alle Elemente in der Box
+  //await box.close();
+//print('Hive storage cleared');
+  //}
 
   List<String> schimpfwoerter = [
     "doof",
@@ -978,6 +983,7 @@ class ChatController extends GetxController {
 
   @override
   void onInit() async {
+    //await clearHiveStorage(); // Löscht den Hive-Speicher zu Beginn
     super.onInit();
     chatContextManager = ChatContextManager();
 
@@ -1005,16 +1011,18 @@ class ChatController extends GetxController {
       speech = stt.SpeechToText();
       count.value = LocalStorage.getTextCount();
   }
-// Methode zum Abrufen der letzten 90 Nachrichten aus Hive
+// Diese Funktion sollte in Ihrer ChatController-Klasse definiert sein
   Future<List<ChatMessage>> getLastMessages() async {
-    var box = await Hive.openBox<ChatMessage>(_boxName);
-    var lastMessages = box.values.toList().reversed.take(90).toList().reversed.toList();
-    _logger.info("Last 90 messages retrieved from Hive.");
-    return lastMessages;
+    var box = await Hive.openBox<ChatMessage>('chatMessages');
+    var messages = box.values.toList().reversed.take(90).toList().reversed.toList();
+    await box.close();
+    return messages;
   }
 
 
+
   Future<void> sendMessage(String message) async {
+    print('sendMessage called with message: $message');
     var box = await Hive.openBox<ChatMessage>('chatMessages');
     var userMessage = ChatMessage(
       text: message,
@@ -1023,19 +1031,16 @@ class ChatController extends GetxController {
     await box.add(userMessage); // Speichern der Nutzernachricht in Hive
     print('User message saved in Hive: $message');
 
-    // Abrufen der letzten 90 Nachrichten aus der Hive-Datenbank
+    // Abrufen der letzten 90 Nachrichten aus der Hive-Datenbank, einschließlich der aktuellen Nachricht
     List<ChatMessage> lastMessages = box.values.toList().reversed.take(90).toList().reversed.toList();
-    print('Last 90 messages retrieved from Hive.');
 
     // Konvertieren der Nachrichten in das erforderliche Format
-    List<Map<String, dynamic>> messagesList = lastMessages.map((msg) => {
+    List<Map<String, String>> messagesList = lastMessages.map((msg) => {
       "role": msg.chatMessageType == ChatMessageType.user ? "user" : "bot",
       "content": msg.text ?? ""
     }).toList();
 
-    // Fügen Sie die aktuelle Nachricht der Liste hinzu
-    messagesList.add({"role": "user", "content": message});
-// Logging der Nachrichten, die an die API gesendet werden
+    // Logging der Nachrichten, die an die API gesendet werden
     print('Sending following messages to API: ${jsonEncode(messagesList)}');
 
     try {
@@ -1049,6 +1054,9 @@ class ChatController extends GetxController {
 
     await box.close(); // Schließen der Hive-Box
   }
+
+
+
 
   loc.Location location = new loc.Location();
 
@@ -1191,31 +1199,14 @@ class ChatController extends GetxController {
     print("proccessChat aufgerufen mit Text: ${chatController.text}");
     speechStopMethod();
     addTextCount();
-    // Überprüfen Sie die Eingabe auf Schimpfwörter
-    // handleChatInput(chatController.text);
 
-    // Benutzernachricht hinzufügen
-    messages.value.add(
-      ChatMessage(
-        text: chatController.text,
-        chatMessageType: ChatMessageType.user,
-      ),
-    );
-    shareMessages.add("${chatController.text} - Myself\n");
-    itemCount.value = messages.value.length;
-
-    isLoading.value = true;
-
-    var input = chatController.text;
-    recentMessages.add(input); // Fügen Sie die Benutzernachricht zur Liste hinzu
-    textInput.value = chatController.text;
-    chatController.clear();
-    update();
-
-    Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
-    update();
-
-    _apiProcess(input);
+    if (chatController.text.isNotEmpty) {
+      // sendMessage aufrufen, um die Nachricht zu verarbeiten und zu senden
+      await sendMessage(chatController.text);
+      Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
+    } else {
+      // Hier können Sie eine Fehlermeldung anzeigen, wenn das Eingabefeld leer ist
+    }
 
     chatController.clear();
     update();
@@ -1243,28 +1234,32 @@ class ChatController extends GetxController {
       content = input;
     }
 
-    // Hier müssten Sie die Logik implementieren, um die letzten Nachrichten aus Hive abzurufen
-    // und sie zusammen mit der aktuellen Nachricht zu senden.
-    // Zum Beispiel:
-    List<ChatMessage> lastMessages = await getLastMessages();
-    List<Map<String, String?>> messagesList = lastMessages.map((msg) => {
-      "role": msg.chatMessageType == ChatMessageType.user ? "user" : "bot",
-      "content": msg.text
-    }).toList();
-
-    // Fügen Sie die aktuelle Nachricht der Liste hinzu
-    messagesList.add({"role": "user", "content": content});
-
-    // Senden Sie diese Nachrichtenliste an Ihre API
-    // Beispiel:
     try {
+      // Abrufen der letzten 90 Nachrichten aus Hive
+      List<ChatMessage> lastMessages = await getLastMessages();
+
+      // Konvertieren der Nachrichten in das erforderliche Format
+      List<Map<String, String?>> messagesList = lastMessages.map((msg) => {
+        "role": msg.chatMessageType == ChatMessageType.user ? "user" : "bot",
+        "content": msg.text
+      }).toList();
+
+      // Fügen Sie die aktuelle Nachricht der Liste hinzu
+      messagesList.add({"role": "user", "content": content});
+
+      // Senden Sie diese Nachrichtenliste an Ihre API
       String response = await ApiServices.generateResponse2(messagesList);
       _addBotResponse(response);
     } catch (e) {
       // Fehlerbehandlung hier
       print('Error in _apiProcess: $e');
+    } finally {
+      isLoading.value = false;
+      update();
     }
   }
+
+
   void _addBotResponse(String response) {
     isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
     debugPrint("---------------Chat Response------------------");
@@ -1298,20 +1293,18 @@ class ChatController extends GetxController {
   RxString textInput = ''.obs;
 
   void proccessChat2() async {
-    print("proccessChat2 aufgerufen mit Text: ${chatController.text}");
+    print("proccessChat2 aufgerufen mit Text: ${textInput.value}");
     speechStopMethod();
     addTextCount();
-    messages.value.add(
-      ChatMessage(
-        text: textInput.value,
-        chatMessageType: ChatMessageType.user,
-      ),
-    );
-    shareMessages.add('${Strings.regeneratingResponse.tr} -Myself\n');
-    itemCount.value = messages.value.length;
-    Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
-    update();
-    _apiProcess(textInput.value);
+
+    if (textInput.value.isNotEmpty) {
+      // sendMessage aufrufen, um die Nachricht zu verarbeiten und zu senden
+      await sendMessage(textInput.value);
+      Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
+    } else {
+      // Hier können Sie eine Fehlermeldung anzeigen, wenn das Eingabefeld leer ist
+    }
+
     chatController.clear();
     update();
   }

@@ -21,12 +21,11 @@ import 'utils/strings.dart';
 import '/helper/local_storage.dart';
 import 'services/chatsession_service.dart'; // Importieren des ChatSessionService
 import 'package:logging/logging.dart';
-
+import '/model/chat_model/chat_model.dart';
 
 void main() async {
   print("App gestartet");
   WidgetsFlutterBinding.ensureInitialized();
-
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) {
     print('${record.level.name}: ${record.time}: ${record.message}');
@@ -34,6 +33,7 @@ void main() async {
 
   // Initialisiert Hive für Flutter
   final appDocumentDir = await path_provider.getApplicationDocumentsDirectory();
+  Hive.registerAdapter(ChatMessageAdapter());
   Hive.init(appDocumentDir.path);
 
   await Hive.initFlutter();

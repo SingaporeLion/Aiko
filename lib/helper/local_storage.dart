@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/model/notification_model/notification_model.dart';
-import 'package:hive/hive.dart';
+
 
 
 const String idKey = "idKey";
