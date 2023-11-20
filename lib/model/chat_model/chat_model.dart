@@ -8,12 +8,14 @@ class ChatMessage extends HiveObject {
   @HiveField(0)
   final String? text;
 
-  // Speichern des Enum-Werts als String
   @HiveField(1)
-  final String chatMessageTypeString;
+  final String chatMessageTypeString; // Stellen Sie sicher, dass dies vorhanden ist
 
   @HiveField(2)
   final bool isTemporary;
+
+  @HiveField(3)
+  final DateTime timestamp;
 
   ChatMessageType get chatMessageType => ChatMessageType.values.firstWhere(
         (e) => e.toString() == 'ChatMessageType.$chatMessageTypeString',
@@ -24,6 +26,7 @@ class ChatMessage extends HiveObject {
     this.text,
     required ChatMessageType chatMessageType,
     this.isTemporary = false,
+    required this.timestamp, // Hinzugefügter Konstruktor-Parameter für den Zeitstempel
   }) : chatMessageTypeString = chatMessageType.toString().split('.').last;
 }
 

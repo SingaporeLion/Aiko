@@ -20,9 +20,9 @@ class ChatContextManager {
   }
 
   Future<String> sendMessageToAPI(List<Map<String, dynamic>> messagesList) async {
-    String apiKey = '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';
+    String apiKey = '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';
 
-    try {
+
       var response = await http.post(
         Uri.parse(apiURL),
         headers: {
@@ -36,18 +36,18 @@ class ChatContextManager {
       );
 
       if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-        return data['response'] ?? 'Keine Antwort von der API';
+        Map<String, dynamic> newResponse = jsonDecode(utf8.decode(response.bodyBytes));
+        if (newResponse != null &&
+            newResponse.containsKey('choices') &&
+            newResponse['choices'].isNotEmpty &&
+            newResponse['choices'][0].containsKey('message') &&
+            newResponse['choices'][0]['message'].containsKey('content')) {
+          return newResponse['choices'][0]['message']['content'];
+        } else {
+          throw Exception('Unexpected response structure from OpenAI API');
+        }
       } else {
-        print('Fehler beim API-Aufruf: ${response.statusCode}');
-        print('Antwort: ${response.body}');
-        return 'Fehler beim Senden der Nachrichten an die API: ${response.body}'; // Gibt die genaue Fehlermeldung zurück
+        throw Exception('Failed to fetch response from OpenAI API with status code: ${response.statusCode}');
       }
-    } catch (e) {
-      print('Exception in sendMessageToAPI: $e');
-      return 'Exception beim Senden der Nachrichten an die API: $e'; // Gibt die genaue Exception zurück
     }
   }
-
-// Weitere Methoden und Logik Ihrer Klasse...
-}

@@ -25,19 +25,22 @@ class ChatMessageAdapter extends TypeAdapter<ChatMessage> {
         orElse: () => ChatMessageType.user,
       ),
       isTemporary: fields[2] as bool,
+      timestamp: fields[3] as DateTime? ?? DateTime.now(), // Überprüfung auf null und Standardwert
     );
   }
 
   @override
   void write(BinaryWriter writer, ChatMessage obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.text)
       ..writeByte(1)
       ..write(obj.chatMessageTypeString)
       ..writeByte(2)
-      ..write(obj.isTemporary);
+      ..write(obj.isTemporary)
+      ..writeByte(3)
+      ..write(obj.timestamp);
   }
 
   @override

@@ -1021,13 +1021,16 @@ class ChatController extends GetxController {
 
 
 
-  Future<void> sendMessage(String message) async {
+  void sendMessage(String message) async {
     print('sendMessage called with message: $message');
     var box = await Hive.openBox<ChatMessage>('chatMessages');
     var userMessage = ChatMessage(
       text: message,
       chatMessageType: ChatMessageType.user,
+      isTemporary: false,
+      timestamp: DateTime.now(), // Hinzufügen des Zeitstempels
     );
+
     await box.add(userMessage); // Speichern der Nutzernachricht in Hive
     print('User message saved in Hive: $message');
 
@@ -1035,9 +1038,10 @@ class ChatController extends GetxController {
     List<ChatMessage> lastMessages = box.values.toList().reversed.take(90).toList().reversed.toList();
 
     // Konvertieren der Nachrichten in das erforderliche Format
-    List<Map<String, String>> messagesList = lastMessages.map((msg) => {
+    List<Map<String, dynamic>> messagesList = lastMessages.map((msg) => {
       "role": msg.chatMessageType == ChatMessageType.user ? "user" : "bot",
-      "content": msg.text ?? ""
+      "content": msg.text ?? "",
+      "timestamp": msg.timestamp.toIso8601String(), // Hinzufügen des Zeitstempels
     }).toList();
 
     // Logging der Nachrichten, die an die API gesendet werden
@@ -1051,8 +1055,6 @@ class ChatController extends GetxController {
     } catch (e) {
       print('Error in sendMessage: $e');
     }
-
-    await box.close(); // Schließen der Hive-Box
   }
 
 
@@ -1112,6 +1114,8 @@ class ChatController extends GetxController {
       ChatMessage(
         text: "Systemnachricht: Du befindest Dich im Bundesland $state. Um Deine Schulferien zu kennen, ist diese Information wichtig und wird auch nur dafür verwendet.",
         chatMessageType: ChatMessageType.bot,  // Verwenden Sie den Bot-Nachrichtentyp
+        isTemporary: true,
+        timestamp: DateTime.now(), // Aktueller Zeitstempel für die temporäre Nachricht
       ),
     );
     update();
@@ -1132,8 +1136,10 @@ class ChatController extends GetxController {
 
     messages.value.add(
       ChatMessage(
-        text: Strings.helloGuest.tr,
+        text: "Lade...", // Text für die Ladeanzeige
         chatMessageType: ChatMessageType.bot,
+        isTemporary: true,
+        timestamp: DateTime.now(), // Aktueller Zeitstempel für die temporäre Nachricht
       ),
     );
     shareMessages.add("${Strings.helloGuest.tr} -By ${Strings.appName}\n\n");
@@ -1201,11 +1207,10 @@ class ChatController extends GetxController {
     addTextCount();
 
     if (chatController.text.isNotEmpty) {
-      // sendMessage aufrufen, um die Nachricht zu verarbeiten und zu senden
-      await sendMessage(chatController.text);
+      sendMessage(chatController.text); // Entfernen von 'await'
       Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
     } else {
-      // Hier können Sie eine Fehlermeldung anzeigen, wenn das Eingabefeld leer ist
+      // Fehlermeldung, wenn das Eingabefeld leer ist
     }
 
     chatController.clear();
@@ -1221,6 +1226,7 @@ class ChatController extends GetxController {
         text: "Lade...", // Text für die Ladeanzeige
         chatMessageType: ChatMessageType.bot,
         isTemporary: true,
+        timestamp: DateTime.now(), // Aktueller Zeitstempel für die temporäre Nachricht
       ),
     );
     isLoading.value = true;
@@ -1238,20 +1244,24 @@ class ChatController extends GetxController {
       // Abrufen der letzten 90 Nachrichten aus Hive
       List<ChatMessage> lastMessages = await getLastMessages();
 
-      // Konvertieren der Nachrichten in das erforderliche Format
-      List<Map<String, String?>> messagesList = lastMessages.map((msg) => {
+      // Konvertieren der Nachrichten in das erforderliche Format mit Zeitstempel
+      List<Map<String, dynamic>> messagesList = lastMessages.map((msg) => {
         "role": msg.chatMessageType == ChatMessageType.user ? "user" : "bot",
-        "content": msg.text
+        "content": msg.text,
+        "timestamp": msg.timestamp.toIso8601String(),
       }).toList();
 
       // Fügen Sie die aktuelle Nachricht der Liste hinzu
-      messagesList.add({"role": "user", "content": content});
+      messagesList.add({
+        "role": "user",
+        "content": content,
+        "timestamp": DateTime.now().toIso8601String() // Aktueller Zeitstempel für die Nutzernachricht
+      });
 
       // Senden Sie diese Nachrichtenliste an Ihre API
       String response = await ApiServices.generateResponse2(messagesList);
       _addBotResponse(response);
     } catch (e) {
-      // Fehlerbehandlung hier
       print('Error in _apiProcess: $e');
     } finally {
       isLoading.value = false;
@@ -1260,34 +1270,41 @@ class ChatController extends GetxController {
   }
 
 
-  void _addBotResponse(String response) {
-    isLoading.value = false;  // Stoppen Sie die 3-Punkte-Animation
+  void _addBotResponse(String response) async {
+    isLoading.value = false;
     debugPrint("---------------Chat Response------------------");
     debugPrint("RECEIVED");
     debugPrint(response);
     debugPrint("---------------END------------------");
 
-    // Sobald die Antwort der KI eintrifft:
-    // Finden und Entfernen der spezifischen temporären Nachricht
+    // Entfernen der temporären Nachricht
     int tempMsgIndex = messages.value.indexWhere((msg) => msg.isTemporary);
     if (tempMsgIndex != -1) {
       messages.value.removeAt(tempMsgIndex);
     }
 
-    // Hinzufügen der KI-Antwort
-    messages.value.add(
-      ChatMessage(
-        text: response.replaceFirst("\n", " ").replaceFirst("\n", " "),
-        chatMessageType: ChatMessageType.bot,
-      ),
+    // Erstellen der Bot-Antwort-Nachricht
+    var botMessage = ChatMessage(
+      text: response,
+      chatMessageType: ChatMessageType.bot,
+      isTemporary: false,
+      timestamp: DateTime.now(), // Hinzufügen des Zeitstempels
     );
 
-    update();  // Aktualisieren Sie den Zustand
+    // Speichern der Bot-Antwort in Hive
+    var box = await Hive.openBox<ChatMessage>('chatMessages');
+    await box.add(botMessage);
+    await box.close();
+
+    // Hinzufügen der Bot-Antwort zur Nachrichtenliste
+    messages.value.add(botMessage);
+    update();
 
     shareMessages.add("${response.replaceFirst("\n", " ").replaceFirst("\n", " ")} -By BOT\n");
     Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
     itemCount.value = messages.value.length;
   }
+
 
 
   RxString textInput = ''.obs;
@@ -1298,11 +1315,10 @@ class ChatController extends GetxController {
     addTextCount();
 
     if (textInput.value.isNotEmpty) {
-      // sendMessage aufrufen, um die Nachricht zu verarbeiten und zu senden
-      await sendMessage(textInput.value);
+      sendMessage(textInput.value); // Entfernen von 'await'
       Future.delayed(const Duration(milliseconds: 50)).then((_) => scrollDown());
     } else {
-      // Hier können Sie eine Fehlermeldung anzeigen, wenn das Eingabefeld leer ist
+      // Fehlermeldung, wenn das Eingabefeld leer ist
     }
 
     chatController.clear();

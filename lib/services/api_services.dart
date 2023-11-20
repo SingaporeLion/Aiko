@@ -6,6 +6,7 @@ class ApiServices {
   static const String _apiKey = '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'; // API-Schlüssel
 
   static Future<String> generateResponse2(List<Map<String, dynamic>> messages) async {
+
     var url = Uri.https("api.openai.com", "/v1/chat/completions");
     Map<String, dynamic> requestBody = {
       "model": "ft:gpt-3.5-turbo-1106:personal::8JRC1Idj",
